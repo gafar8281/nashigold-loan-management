@@ -52,11 +52,11 @@ export default function NewLoanPage() {
   const loanAmount = parseFloat(form.loanAmount) || 0
   const interestRate = parseFloat(form.interestRate) || 0
   const lateFee = parseFloat(form.lateFee) || 0
-  const interestAmount = calcInterestAmount(loanAmount, interestRate)
-  const totalRepayment = calcTotalRepayment(loanAmount, interestAmount, lateFee)
   const termMonths = form.periodFrom && form.periodTo
     ? calcTermMonths(form.periodFrom, form.periodTo)
     : 0
+  const interestAmount = calcInterestAmount(loanAmount, interestRate, termMonths)
+  const totalRepayment = calcTotalRepayment(loanAmount, interestAmount, lateFee)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
