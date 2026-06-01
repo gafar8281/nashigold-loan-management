@@ -1,0 +1,113 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Plus, Search } from 'lucide-react'
+import { useData } from '@/context/DataContext'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import AddCustomerDialog from '@/components/customers/AddCustomerDialog'
+import { formatDate } from '@/lib/formatters'
+
+export default function CustomersPage() {
+  const { customers, getLoansByCustomerId } = useData()
+  const [search, setSearch] = useState('')
+  const [showAdd, setShowAdd] = useState(false)
+
+  const filtered = customers.filter(c => {
+    const q = search.toLowerCase()
+    return (
+      c.fullName.toLowerCase().includes(q) ||
+      c.idNumber.includes(q) ||
+      c.id.toLowerCase().includes(q)
+    )
+  })
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Customers</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{customers.length} total customers</p>
+        </div>
+        <Button onClick={() => setShowAdd(true)}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          Add Customer
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              placeholder="Search by name, ID number, or customer ID…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Customer ID</TableHead>
+                <TableHead>Full Name</TableHead>
+                <TableHead>ID Number</TableHead>
+                <TableHead>Mobile</TableHead>
+                <TableHead>Date of Birth</TableHead>
+                <TableHead>Active Loans</TableHead>
+                <TableHead>Member Since</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    No customers found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map(customer => {
+                  const loans = getLoansByCustomerId(customer.id)
+                  const activeCount = loans.filter(l => l.status === 'Active' || l.status === 'Overdue').length
+                  return (
+                    <TableRow key={customer.id}>
+                      <TableCell>
+                        <Link to={`/customers/${customer.id}`} className="font-medium text-amber-600 hover:underline">
+                          {customer.id}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link to={`/customers/${customer.id}`} className="font-medium hover:underline">
+                          {customer.fullName}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{customer.idNumber}</TableCell>
+                      <TableCell className="text-muted-foreground">{customer.mobile}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatDate(customer.dateOfBirth)}</TableCell>
+                      <TableCell>
+                        {activeCount > 0 ? (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                            {activeCount}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{formatDate(customer.createdAt)}</TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <AddCustomerDialog open={showAdd} onClose={() => setShowAdd(false)} />
+    </div>
+  )
+}
