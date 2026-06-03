@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Landmark, BarChart3, LogOut, Coins } from 'lucide-react'
+import { LayoutDashboard, Users, Landmark, BarChart3, LogOut, Coins, Settings } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import UserSettingsModal from '@/components/settings/UserSettingsModal'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -14,6 +16,7 @@ const navItems = [
 export default function AppLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [showSettings, setShowSettings] = useState(false)
 
   function handleLogout() {
     logout()
@@ -59,15 +62,27 @@ export default function AppLayout() {
 
         {/* User + logout */}
         <div className="border-t px-3 py-4">
-          <div className="mb-2 px-3">
-            <p className="text-xs font-medium truncate">{user?.email}</p>
-            <p className="text-xs text-muted-foreground truncate">{user?.branch}</p>
+          <div className="mb-2 flex items-center gap-1 px-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium truncate">{user?.email}</p>
+              <p className="text-xs text-muted-foreground truncate">{user?.branch}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0 text-muted-foreground"
+              onClick={() => setShowSettings(true)}
+              title="Account Settings"
+            >
+              <Settings className="h-3.5 w-3.5" />
+            </Button>
           </div>
           <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
             Sign Out
           </Button>
         </div>
+        <UserSettingsModal open={showSettings} onClose={() => setShowSettings(false)} />
       </aside>
 
       {/* Main content */}

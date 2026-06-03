@@ -8,6 +8,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => boolean
   signup: (email: string, branch: string, password: string) => void
   logout: () => void
+  updateUser: (updates: { email?: string; branch?: string }) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -50,8 +51,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
+  function updateUser(updates: { email?: string; branch?: string }): void {
+    setUser(prev => prev ? { ...prev, ...updates } : prev)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, signup, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

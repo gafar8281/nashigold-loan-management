@@ -69,7 +69,7 @@ export default function ReportsPage() {
                   <TableHead>Loan ID</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Loan Amount</TableHead>
-                  <TableHead>Period</TableHead>
+                  <TableHead>Period</TableHead> 
                   <TableHead>Remaining Balance</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
@@ -255,6 +255,10 @@ export default function ReportsPage() {
             <Card>
               <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">Overdue Amount</CardTitle></CardHeader>
               <CardContent><p className="text-xl font-bold text-red-600">{formatCurrency(totalOverdueAmount)}</p><p className="text-xs text-muted-foreground mt-0.5">{overdueLoans.length} overdue loans</p></CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">Profit Amount</CardTitle></CardHeader>
+              <CardContent><p className="text-xl font-bold text-green-600">{formatCurrency(27000)}</p><p className="text-xs text-muted-foreground mt-0.5">Total profit amount</p></CardContent>
             </Card>
           </div>
 
