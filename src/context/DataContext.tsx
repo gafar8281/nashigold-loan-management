@@ -1,19 +1,22 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { Customer, Loan } from '@/types'
-import { initialCustomers } from '@/data/customers'
-import { initialLoans } from '@/data/loans'
 import { resolveStatus } from '@/lib/calculations'
 import { nextCustomerId, nextLoanId } from '@/lib/idGen'
 import { todayISO } from '@/lib/formatters'
+import { customerService } from '@/services/customerService'
+import { loanService } from '@/services/loanService'
+import { seedIfEmpty } from '@/lib/seed'
 
 interface DataContextValue {
   customers: Customer[]
   loans: Loan[]
-  addCustomer: (data: Omit<Customer, 'id' | 'createdAt' | 'idProofUrl'>) => Customer
-  updateCustomer: (id: string, data: Partial<Customer>) => void
-  addLoan: (data: Omit<Loan, 'id' | 'createdAt'>) => Loan
-  updateLoan: (id: string, data: Partial<Loan>) => void
+  loading: boolean
+  error: string | null
+  addCustomer: (data: Omit<Customer, 'id' | 'createdAt' | 'idProofUrl'>) => Promise<Customer>
+  updateCustomer: (id: string, data: Partial<Customer>) => Promise<void>
+  addLoan: (data: Omit<Loan, 'id' | 'createdAt'>) => Promise<Loan>
+  updateLoan: (id: string, data: Partial<Loan>) => Promise<void>
   getCustomerById: (id: string) => Customer | undefined
   getLoanById: (id: string) => Loan | undefined
   getLoansByCustomerId: (customerId: string) => Loan[]
@@ -22,38 +25,100 @@ interface DataContextValue {
 const DataContext = createContext<DataContextValue | null>(null)
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers)
-  const [rawLoans, setRawLoans] = useState<Loan[]>(initialLoans)
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [rawLoans, setRawLoans] = useState<Loan[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
+  // Live, derived view: overdue is computed on read, never stored.
   const loans: Loan[] = rawLoans.map(l => ({ ...l, status: resolveStatus(l) }))
 
-  function addCustomer(data: Omit<Customer, 'id' | 'createdAt' | 'idProofUrl'>): Customer {
+  // Latest synced arrays, read inside async mutators for id generation without
+  // re-subscribing on every change. Kept current in the snapshot callbacks below.
+  const customersRef = useRef(customers)
+  const rawLoansRef = useRef(rawLoans)
+
+  useEffect(() => {
+    let cancelled = false
+    let customersLoaded = false
+    let loansLoaded = false
+    let unsubCustomers: (() => void) | undefined
+    let unsubLoans: (() => void) | undefined
+
+    function markLoaded() {
+      if (customersLoaded && loansLoaded && !cancelled) setLoading(false)
+    }
+
+    function handleError(err: Error) {
+      if (cancelled) return
+      setError(err.message || 'Failed to load data from Firestore.')
+      setLoading(false)
+    }
+
+    async function init() {
+      try {
+        await seedIfEmpty()
+      } catch (err) {
+        handleError(err as Error)
+        return
+      }
+      if (cancelled) return
+
+      unsubCustomers = customerService.subscribe(items => {
+        if (cancelled) return
+        customersRef.current = items
+        setCustomers(items)
+        customersLoaded = true
+        markLoaded()
+      }, handleError)
+
+      unsubLoans = loanService.subscribe(items => {
+        if (cancelled) return
+        rawLoansRef.current = items
+        setRawLoans(items)
+        loansLoaded = true
+        markLoaded()
+      }, handleError)
+    }
+
+    init()
+
+    return () => {
+      cancelled = true
+      unsubCustomers?.()
+      unsubLoans?.()
+    }
+  }, [])
+
+  async function addCustomer(
+    data: Omit<Customer, 'id' | 'createdAt' | 'idProofUrl'>,
+  ): Promise<Customer> {
     const newCustomer: Customer = {
       ...data,
-      id: nextCustomerId(customers),
+      id: nextCustomerId(customersRef.current),
       idProofUrl: '/mock/id_placeholder.jpg',
       createdAt: todayISO(),
     }
-    setCustomers(prev => [...prev, newCustomer])
+    await customerService.setDoc(newCustomer.id, newCustomer)
     return newCustomer
   }
 
-  function updateCustomer(id: string, data: Partial<Customer>): void {
-    setCustomers(prev => prev.map(c => c.id === id ? { ...c, ...data } : c))
+  async function updateCustomer(id: string, data: Partial<Customer>): Promise<void> {
+    await customerService.update(id, data)
   }
 
-  function addLoan(data: Omit<Loan, 'id' | 'createdAt'>): Loan {
+  async function addLoan(data: Omit<Loan, 'id' | 'createdAt'>): Promise<Loan> {
     const newLoan: Loan = {
       ...data,
-      id: nextLoanId(rawLoans),
+      id: nextLoanId(rawLoansRef.current),
       createdAt: todayISO(),
     }
-    setRawLoans(prev => [...prev, newLoan])
+    await loanService.setDoc(newLoan.id, newLoan)
     return newLoan
   }
 
-  function updateLoan(id: string, data: Partial<Loan>): void {
-    setRawLoans(prev => prev.map(l => l.id === id ? { ...l, ...data } : l))
+  async function updateLoan(id: string, data: Partial<Loan>): Promise<void> {
+    await loanService.update(id, data)
   }
 
   function getCustomerById(id: string): Customer | undefined {
@@ -72,6 +137,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     <DataContext.Provider value={{
       customers,
       loans,
+      loading,
+      error,
       addCustomer,
       updateCustomer,
       addLoan,

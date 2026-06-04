@@ -19,9 +19,10 @@ interface Props {
   customer: Customer
   onApprove: (notes: string) => void
   onReject: () => void
+  saving?: boolean
 }
 
-export default function ApprovalModal({ open, loan, customer, onApprove, onReject }: Props) {
+export default function ApprovalModal({ open, loan, customer, onApprove, onReject, saving = false }: Props) {
   const [notes, setNotes] = useState('')
 
   function handleApprove() {
@@ -112,11 +113,11 @@ export default function ApprovalModal({ open, loan, customer, onApprove, onRejec
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="destructive" onClick={handleReject}>
+          <Button variant="destructive" onClick={handleReject} disabled={saving}>
             Reject
           </Button>
-          <Button className="bg-green-600 hover:bg-green-700" onClick={handleApprove}>
-            Approve Loan
+          <Button className="bg-green-600 hover:bg-green-700" onClick={handleApprove} disabled={saving}>
+            {saving ? 'Saving…' : 'Approve Loan'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -25,21 +25,31 @@ export default function AddCustomerDialog({ open, onClose }: Props) {
     mobile: '',
     idProofFileName: '',
   })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   function set(field: string, value: string) {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    addCustomer({
-      fullName: form.fullName,
-      idNumber: form.idNumber,
-      dateOfBirth: form.dateOfBirth,
-      mobile: form.mobile,
-    })
-    setForm({ fullName: '', idNumber: '', dateOfBirth: '', mobile: '', idProofFileName: '' })
-    onClose()
+    setSaving(true)
+    setError(null)
+    try {
+      await addCustomer({
+        fullName: form.fullName,
+        idNumber: form.idNumber,
+        dateOfBirth: form.dateOfBirth,
+        mobile: form.mobile,
+      })
+      setForm({ fullName: '', idNumber: '', dateOfBirth: '', mobile: '', idProofFileName: '' })
+      onClose()
+    } catch (err) {
+      setError((err as Error).message || 'Failed to save customer.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -69,9 +79,10 @@ export default function AddCustomerDialog({ open, onClose }: Props) {
             <Label htmlFor="idProof">ID Proof (mock filename)</Label>
             <Input id="idProof" value={form.idProofFileName} onChange={e => set('idProofFileName', e.target.value)} placeholder="national_id.jpg" />
           </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">Add Customer</Button>
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            <Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Add Customer'}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

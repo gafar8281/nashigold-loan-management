@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Landmark, BarChart3, LogOut, Coins, Settings } from 'lucide-react'
+import { LayoutDashboard, Users, Landmark, BarChart3, LogOut, Coins, Settings, Loader2, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { useData } from '@/context/DataContext'
 import { Button } from '@/components/ui/button'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
 import UserSettingsModal from '@/components/settings/UserSettingsModal'
 
@@ -15,6 +17,7 @@ const navItems = [
 
 export default function AppLayout() {
   const { user, logout } = useAuth()
+  const { loading, error } = useData()
   const navigate = useNavigate()
   const [showSettings, setShowSettings] = useState(false)
 
@@ -87,7 +90,22 @@ export default function AppLayout() {
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
-        <Outlet />
+        {error ? (
+          <div className="p-6">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Couldn't load data</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
+        ) : loading ? (
+          <div className="flex h-full items-center justify-center text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin mr-2" />
+            Loading data…
+          </div>
+        ) : (
+          <Outlet />
+        )}
       </main>
     </div>
   )

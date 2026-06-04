@@ -20,6 +20,7 @@ export default function LoanDetailPage() {
   const customer = loan ? getCustomerById(loan.customerId) : undefined
 
   const [paymentAmount, setPaymentAmount] = useState('')
+  const [saving, setSaving] = useState(false)
 
   if (!loan) {
     return (
@@ -30,22 +31,32 @@ export default function LoanDetailPage() {
     )
   }
 
-  function handlePayment(e: React.FormEvent) {
+  async function handlePayment(e: React.FormEvent) {
     e.preventDefault()
     const amount = parseFloat(paymentAmount)
     if (!amount || amount <= 0 || !loan) return
     const newAmountPaid = loan.amountPaid + amount
     const newRemaining = calcRemainingBalance(loan.totalRepayment, newAmountPaid)
-    updateLoan(loan.id, {
-      amountPaid: newAmountPaid,
-      remainingBalance: newRemaining,
-    })
-    setPaymentAmount('')
+    setSaving(true)
+    try {
+      await updateLoan(loan.id, {
+        amountPaid: newAmountPaid,
+        remainingBalance: newRemaining,
+      })
+      setPaymentAmount('')
+    } finally {
+      setSaving(false)
+    }
   }
 
-  function handleCloseLoan() {
+  async function handleCloseLoan() {
     if (!loan) return
-    updateLoan(loan.id, { status: 'Closed' })
+    setSaving(true)
+    try {
+      await updateLoan(loan.id, { status: 'Closed' })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const canClose = loan.status !== 'Closed' && loan.status !== 'Pending Approval'
@@ -68,13 +79,13 @@ export default function LoanDetailPage() {
           </div>
         </div>
         {canClose && loan.remainingBalance <= 0 && (
-          <Button variant="outline" size="sm" className="gap-1.5 text-green-700 border-green-300" onClick={handleCloseLoan}>
+          <Button variant="outline" size="sm" className="gap-1.5 text-green-700 border-green-300" onClick={handleCloseLoan} disabled={saving}>
             <CheckCircle className="h-4 w-4" />
             Mark Closed
           </Button>
         )}
         {canClose && loan.remainingBalance > 0 && (
-          <Button variant="outline" size="sm" onClick={handleCloseLoan}>
+          <Button variant="outline" size="sm" onClick={handleCloseLoan} disabled={saving}>
             Close Loan
           </Button>
         )}
@@ -172,7 +183,7 @@ export default function LoanDetailPage() {
                   required
                 />
               </div>
-              <Button type="submit">Record Payment</Button>
+              <Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Record Payment'}</Button>
             </form>
           </CardContent>
         </Card>

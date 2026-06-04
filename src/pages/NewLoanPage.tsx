@@ -36,6 +36,7 @@ export default function NewLoanPage() {
   const [customerSearch, setCustomerSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [pendingLoan, setPendingLoan] = useState<Omit<Loan, 'id' | 'createdAt'> | null>(null)
+  const [saving, setSaving] = useState(false)
 
   function set(field: string, value: string) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -82,11 +83,16 @@ export default function NewLoanPage() {
     setShowModal(true)
   }
 
-  function handleApprove(notes: string) {
+  async function handleApprove(notes: string) {
     if (!pendingLoan) return
-    const saved = addLoan({ ...pendingLoan, status: 'Active', approvalNotes: notes })
-    setShowModal(false)
-    navigate(`/loans/${saved.id}`)
+    setSaving(true)
+    try {
+      const saved = await addLoan({ ...pendingLoan, status: 'Active', approvalNotes: notes })
+      setShowModal(false)
+      navigate(`/loans/${saved.id}`)
+    } finally {
+      setSaving(false)
+    }
   }
 
   function handleReject() {
@@ -237,6 +243,7 @@ export default function NewLoanPage() {
           customer={selectedCustomer}
           onApprove={handleApprove}
           onReject={handleReject}
+          saving={saving}
         />
       )}
     </div>
