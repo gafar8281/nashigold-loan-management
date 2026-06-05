@@ -12,12 +12,11 @@ const TABS = [
   { id: 'active', label: 'Active Loans' },
   { id: 'overdue', label: 'Overdue Loans' },
   { id: 'closed', label: 'Closed Loans' },
-  { id: 'transactions', label: 'Customer Transactions' },
   { id: 'summary', label: 'Branch Summary' },
 ]
 
 export default function ReportsPage() {
-  const { loans, customers, getCustomerById } = useData()
+  const { loans, getCustomerById } = useData()
   const [activeTab, setActiveTab] = useState('active')
 
   const activeLoans = loans.filter(l => l.status === 'Active')
@@ -185,57 +184,6 @@ export default function ReportsPage() {
         </Card>
       )}
 
-      {/* Tab: Customer Transactions */}
-      {activeTab === 'transactions' && (
-        <div className="space-y-4">
-          {customers.map(customer => {
-            const customerLoans = loans.filter(l => l.customerId === customer.id)
-            if (customerLoans.length === 0) return null
-            return (
-              <Card key={customer.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm">
-                      <Link to={`/customers/${customer.id}`} className="text-amber-600 hover:underline">
-                        {customer.fullName}
-                      </Link>
-                      <span className="text-muted-foreground font-normal ml-2">{customer.id}</span>
-                    </CardTitle>
-                    <span className="text-xs text-muted-foreground">{customerLoans.length} loan{customerLoans.length !== 1 ? 's' : ''}</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Loan ID</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Paid</TableHead>
-                        <TableHead>Remaining</TableHead>
-                        <TableHead>Period</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {customerLoans.map(loan => (
-                        <TableRow key={loan.id}>
-                          <TableCell><Link to={`/loans/${loan.id}`} className="text-amber-600 hover:underline font-medium">{loan.id}</Link></TableCell>
-                          <TableCell>{formatCurrency(loan.loanAmount)}</TableCell>
-                          <TableCell className="text-green-700">{formatCurrency(loan.amountPaid)}</TableCell>
-                          <TableCell>{formatCurrency(loan.remainingBalance)}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{formatDate(loan.periodFrom)} – {formatDate(loan.periodTo)}</TableCell>
-                          <TableCell><StatusBadge status={loan.status} /></TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      )}
-
       {/* Tab: Branch Summary */}
       {activeTab === 'summary' && (
         <div className="space-y-4">
@@ -266,7 +214,7 @@ export default function ReportsPage() {
             <CardHeader><CardTitle className="text-base">Loan Status Breakdown</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                {(['Active', 'Overdue', 'Approved', 'Pending Approval', 'Closed'] as const).map(status => {
+                {(['Active', 'Overdue', 'Approved', 'Closed'] as const).map(status => {
                   const count = loans.filter(l => l.status === status).length
                   const pct = loans.length ? Math.round((count / loans.length) * 100) : 0
                   return (

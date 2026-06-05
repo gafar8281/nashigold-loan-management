@@ -23,13 +23,18 @@ export default function AddCustomerDialog({ open, onClose }: Props) {
     idNumber: '',
     dateOfBirth: '',
     mobile: '',
-    idProofFileName: '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   function set(field: string, value: string) {
     setForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  function handleClose() {
+    setForm({ fullName: '', idNumber: '', dateOfBirth: '', mobile: '' })
+    setError(null)
+    onClose()
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -43,7 +48,7 @@ export default function AddCustomerDialog({ open, onClose }: Props) {
         dateOfBirth: form.dateOfBirth,
         mobile: form.mobile,
       })
-      setForm({ fullName: '', idNumber: '', dateOfBirth: '', mobile: '', idProofFileName: '' })
+      setForm({ fullName: '', idNumber: '', dateOfBirth: '', mobile: '' })
       onClose()
     } catch (err) {
       setError((err as Error).message || 'Failed to save customer.')
@@ -53,7 +58,7 @@ export default function AddCustomerDialog({ open, onClose }: Props) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={v => !v && onClose()}>
+    <Dialog open={open} onOpenChange={v => !v && handleClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add New Customer</DialogTitle>
@@ -75,13 +80,9 @@ export default function AddCustomerDialog({ open, onClose }: Props) {
             <Label htmlFor="mobile">Mobile</Label>
             <Input id="mobile" value={form.mobile} onChange={e => set('mobile', e.target.value)} required placeholder="+966501234567" />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="idProof">ID Proof (mock filename)</Label>
-            <Input id="idProof" value={form.idProofFileName} onChange={e => set('idProofFileName', e.target.value)} placeholder="national_id.jpg" />
-          </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={saving}>Cancel</Button>
             <Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Add Customer'}</Button>
           </DialogFooter>
         </form>

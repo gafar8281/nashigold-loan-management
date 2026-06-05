@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Landmark, AlertCircle, CheckCircle2, Clock, TrendingUp } from 'lucide-react'
+import { Landmark, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react'
 import { useData } from '@/context/DataContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -12,8 +12,6 @@ export default function DashboardPage() {
   const active = loans.filter(l => l.status === 'Active')
   const overdue = loans.filter(l => l.status === 'Overdue')
   const closed = loans.filter(l => l.status === 'Closed')
-  const pending = loans.filter(l => l.status === 'Pending Approval')
-
   const totalPortfolio = loans
     .filter(l => l.status !== 'Closed')
     .reduce((sum, l) => sum + l.remainingBalance, 0)
@@ -46,14 +44,6 @@ export default function DashboardPage() {
       icon: CheckCircle2,
       color: 'text-gray-500',
       bg: 'bg-gray-50 dark:bg-gray-800',
-    },
-    {
-      title: 'Pending Approval',
-      value: pending.length,
-      sub: formatCurrency(pending.reduce((s, l) => s + l.loanAmount, 0)),
-      icon: Clock,
-      color: 'text-yellow-600',
-      bg: 'bg-yellow-50 dark:bg-yellow-950',
     },
     {
       title: 'Total Portfolio',

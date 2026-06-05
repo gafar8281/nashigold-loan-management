@@ -27,7 +27,7 @@ export function isOverdue(periodTo: string, status: LoanStatus): boolean {
 
 export function resolveStatus(loan: Loan): LoanStatus {
   if (loan.status === 'Closed') return 'Closed'
-  if (loan.status === 'Pending Approval') return 'Pending Approval'
+  if ((loan.status as string) === 'Pending Approval') return 'Active'
   if (isOverdue(loan.periodTo, loan.status)) return 'Overdue'
   return loan.status
 }

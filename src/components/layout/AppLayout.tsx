@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Landmark, BarChart3, LogOut, Coins, Settings, Loader2, AlertCircle } from 'lucide-react'
+import { LayoutDashboard, Users, Landmark, BarChart3, Building2, LogOut, Coins, Settings, Loader2, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useData } from '@/context/DataContext'
 import { Button } from '@/components/ui/button'
@@ -8,21 +8,25 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
 import UserSettingsModal from '@/components/settings/UserSettingsModal'
 
-const navItems = [
+const baseNavItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/customers', label: 'Customers', icon: Users, end: false },
   { to: '/loans', label: 'Loans', icon: Landmark, end: false },
   { to: '/reports', label: 'Reports', icon: BarChart3, end: false },
 ]
 
+const adminNavItem = { to: '/branches', label: 'Branches', icon: Building2, end: false }
+
 export default function AppLayout() {
-  const { user, logout } = useAuth()
+  const { user, isAdmin, logout } = useAuth()
   const { loading, error } = useData()
   const navigate = useNavigate()
   const [showSettings, setShowSettings] = useState(false)
 
-  function handleLogout() {
-    logout()
+  const navItems = isAdmin ? [...baseNavItems, adminNavItem] : baseNavItems
+
+  async function handleLogout() {
+    await logout()
     navigate('/login')
   }
 
@@ -68,7 +72,9 @@ export default function AppLayout() {
           <div className="mb-2 flex items-center gap-1 px-3">
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium truncate">{user?.email}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.branch}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {isAdmin ? 'Administrator' : user?.branchName}
+              </p>
             </div>
             <Button
               variant="ghost"

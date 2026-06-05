@@ -13,7 +13,6 @@ const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'all', label: 'All Loans' },
   { value: 'Active', label: 'Active' },
   { value: 'Overdue', label: 'Overdue' },
-  { value: 'Pending Approval', label: 'Pending Approval' },
   { value: 'Approved', label: 'Approved' },
   { value: 'Closed', label: 'Closed' },
 ]

@@ -13,7 +13,7 @@ interface DataContextValue {
   loans: Loan[]
   loading: boolean
   error: string | null
-  addCustomer: (data: Omit<Customer, 'id' | 'createdAt' | 'idProofUrl'>) => Promise<Customer>
+  addCustomer: (data: Omit<Customer, 'id' | 'createdAt'>) => Promise<Customer>
   updateCustomer: (id: string, data: Partial<Customer>) => Promise<void>
   addLoan: (data: Omit<Loan, 'id' | 'createdAt'>) => Promise<Loan>
   updateLoan: (id: string, data: Partial<Loan>) => Promise<void>
@@ -91,12 +91,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   async function addCustomer(
-    data: Omit<Customer, 'id' | 'createdAt' | 'idProofUrl'>,
+    data: Omit<Customer, 'id' | 'createdAt'>,
   ): Promise<Customer> {
+    const dupId     = customersRef.current.find(c => c.idNumber === data.idNumber)
+    const dupMobile = customersRef.current.find(c => c.mobile   === data.mobile)
+
+    if (dupId && dupMobile) {
+      throw new Error('A customer with this ID Number and Mobile Number already exists.')
+    }
+    if (dupId) {
+      throw new Error('A customer with this ID Number already exists.')
+    }
+    if (dupMobile) {
+      throw new Error('A customer with this Mobile Number already exists.')
+    }
+
     const newCustomer: Customer = {
       ...data,
       id: nextCustomerId(customersRef.current),
-      idProofUrl: '/mock/id_placeholder.jpg',
       createdAt: todayISO(),
     }
     await customerService.setDoc(newCustomer.id, newCustomer)

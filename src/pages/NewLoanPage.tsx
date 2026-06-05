@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import ApprovalModal from '@/components/loans/ApprovalModal'
 import {
   calcInterestAmount,
   calcTotalRepayment,
@@ -15,7 +14,6 @@ import {
   calcTermMonths,
 } from '@/lib/calculations'
 import { formatCurrency, todayISO } from '@/lib/formatters'
-import type { Loan } from '@/types'
 
 export default function NewLoanPage() {
   const { customers, addLoan } = useData()
@@ -29,13 +27,12 @@ export default function NewLoanPage() {
     periodTo: '',
     loanAmount: '',
     goldWeight: '',
+    physicalBillNumber: '',
     interestRate: '5',
     lateFee: '0',
   })
 
   const [customerSearch, setCustomerSearch] = useState('')
-  const [showModal, setShowModal] = useState(false)
-  const [pendingLoan, setPendingLoan] = useState<Omit<Loan, 'id' | 'createdAt'> | null>(null)
   const [saving, setSaving] = useState(false)
 
   function set(field: string, value: string) {
@@ -59,45 +56,32 @@ export default function NewLoanPage() {
   const interestAmount = calcInterestAmount(loanAmount, interestRate, termMonths)
   const totalRepayment = calcTotalRepayment(loanAmount, interestAmount, lateFee)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.customerId || !selectedCustomer) return
 
-    const loan: Omit<Loan, 'id' | 'createdAt'> = {
-      customerId: form.customerId,
-      periodFrom: form.periodFrom,
-      periodTo: form.periodTo,
-      termMonths,
-      loanAmount,
-      goldWeight: parseFloat(form.goldWeight) || 0,
-      interestRate,
-      lateFee,
-      amountPaid: 0,
-      interestAmount,
-      totalRepayment,
-      remainingBalance: calcRemainingBalance(totalRepayment, 0),
-      status: 'Pending Approval',
-      approvalNotes: '',
-    }
-    setPendingLoan(loan)
-    setShowModal(true)
-  }
-
-  async function handleApprove(notes: string) {
-    if (!pendingLoan) return
     setSaving(true)
     try {
-      const saved = await addLoan({ ...pendingLoan, status: 'Active', approvalNotes: notes })
-      setShowModal(false)
+      const saved = await addLoan({
+        customerId: form.customerId,
+        periodFrom: form.periodFrom,
+        periodTo: form.periodTo,
+        termMonths,
+        loanAmount,
+        goldWeight: parseFloat(form.goldWeight) || 0,
+        physicalBillNumber: form.physicalBillNumber.trim(),
+        interestRate,
+        lateFee,
+        amountPaid: 0,
+        interestAmount,
+        totalRepayment,
+        remainingBalance: calcRemainingBalance(totalRepayment, 0),
+        status: 'Active',
+      })
       navigate(`/loans/${saved.id}`)
     } finally {
       setSaving(false)
     }
-  }
-
-  function handleReject() {
-    setShowModal(false)
-    setPendingLoan(null)
   }
 
   return (
@@ -111,7 +95,7 @@ export default function NewLoanPage() {
 
       <div>
         <h1 className="text-2xl font-semibold">New Loan</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Fill in the details and submit for approval</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Fill in the details to create a loan</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -188,6 +172,11 @@ export default function NewLoanPage() {
                 <Input id="goldWeight" type="number" min="0.1" step="0.1" value={form.goldWeight} onChange={e => set('goldWeight', e.target.value)} required placeholder="50" />
               </div>
 
+              <div className="space-y-1.5">
+                <Label htmlFor="physicalBillNumber">Physical Bill Number</Label>
+                <Input id="physicalBillNumber" value={form.physicalBillNumber} onChange={e => set('physicalBillNumber', e.target.value)} placeholder="e.g. BILL-0001" />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="interestRate">Interest Rate (%)</Label>
@@ -231,21 +220,10 @@ export default function NewLoanPage() {
           </Card>
         </div>
 
-        <Button type="submit" size="lg" disabled={!form.customerId}>
-          Submit for Approval
+        <Button type="submit" size="lg" disabled={!form.customerId || saving}>
+          {saving ? 'Creating…' : 'Create Loan'}
         </Button>
       </form>
-
-      {showModal && pendingLoan && selectedCustomer && (
-        <ApprovalModal
-          open={showModal}
-          loan={{ ...pendingLoan, id: '', createdAt: '' }}
-          customer={selectedCustomer}
-          onApprove={handleApprove}
-          onReject={handleReject}
-          saving={saving}
-        />
-      )}
     </div>
   )
 }

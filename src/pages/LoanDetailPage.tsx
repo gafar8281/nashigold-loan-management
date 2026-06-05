@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle, MessageCircle, Pencil } from 'lucide-react'
 import { useData } from '@/context/DataContext'
+import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,11 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import StatusBadge from '@/components/shared/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/formatters'
-import { calcRemainingBalance } from '@/lib/calculations'
+import { calcRemainingBalance, calcDaysOverdue, isOverdue } from '@/lib/calculations'
+import EditLoanDialog from '@/components/loans/EditLoanDialog'
+import type { Loan } from '@/types'
 
 export default function LoanDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { getLoanById, getCustomerById, updateLoan } = useData()
+  const { isAdmin } = useAuth()
   const navigate = useNavigate()
 
   const loan = getLoanById(id!)
@@ -21,6 +25,7 @@ export default function LoanDetailPage() {
 
   const [paymentAmount, setPaymentAmount] = useState('')
   const [saving, setSaving] = useState(false)
+  const [editingLoan, setEditingLoan] = useState<Loan | null>(null)
 
   if (!loan) {
     return (
@@ -59,7 +64,26 @@ export default function LoanDetailPage() {
     }
   }
 
-  const canClose = loan.status !== 'Closed' && loan.status !== 'Pending Approval'
+  const canClose = loan.status !== 'Closed'
+
+  function handleSendWhatsApp() {
+    if (!customer || !loan) return
+    const daysOverdue = calcDaysOverdue(loan.periodTo)
+    const message = [
+      `Dear ${customer.fullName},`,
+      ``,
+      `This is a reminder that your gold loan is overdue.`,
+      ``,
+      `Loan Number: ${loan.id}`,
+      `Due Date: ${formatDate(loan.periodTo)}`,
+      `Days Overdue: ${daysOverdue} day(s)`,
+      `Outstanding Balance: ${formatCurrency(loan.remainingBalance)}`,
+      ``,
+      `Please visit the branch or contact us to settle the outstanding amount.`,
+    ].join('\n')
+    const phone = customer.mobile.replace(/\D/g, '')
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
+  }
 
   return (
     <div className="p-6 space-y-6 max-w-3xl">
@@ -78,17 +102,31 @@ export default function LoanDetailPage() {
             <span className="text-sm text-muted-foreground">Created {formatDate(loan.createdAt)}</span>
           </div>
         </div>
-        {canClose && loan.remainingBalance <= 0 && (
-          <Button variant="outline" size="sm" className="gap-1.5 text-green-700 border-green-300" onClick={handleCloseLoan} disabled={saving}>
-            <CheckCircle className="h-4 w-4" />
-            Mark Closed
-          </Button>
-        )}
-        {canClose && loan.remainingBalance > 0 && (
-          <Button variant="outline" size="sm" onClick={handleCloseLoan} disabled={saving}>
-            Close Loan
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {isOverdue(loan.periodTo, loan.status) && (
+            <Button variant="outline" size="sm" className="gap-1.5 text-green-700 border-green-300" onClick={handleSendWhatsApp}>
+              <MessageCircle className="h-4 w-4" />
+              Send WhatsApp
+            </Button>
+          )}
+          {isAdmin && (
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditingLoan(loan)}>
+              <Pencil className="h-4 w-4" />
+              Edit Loan
+            </Button>
+          )}
+          {canClose && loan.remainingBalance <= 0 && (
+            <Button variant="outline" size="sm" className="gap-1.5 text-green-700 border-green-300" onClick={handleCloseLoan} disabled={saving}>
+              <CheckCircle className="h-4 w-4" />
+              Mark Closed
+            </Button>
+          )}
+          {canClose && loan.remainingBalance > 0 && (
+            <Button variant="outline" size="sm" onClick={handleCloseLoan} disabled={saving}>
+              Close Loan
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -118,6 +156,10 @@ export default function LoanDetailPage() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Gold Weight</span>
               <span>{loan.goldWeight}g</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Physical Bill No.</span>
+              <span>{loan.physicalBillNumber || '—'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Interest Rate</span>
@@ -165,7 +207,7 @@ export default function LoanDetailPage() {
       </div>
 
       {/* Payment section */}
-      {loan.status !== 'Closed' && loan.status !== 'Pending Approval' && (
+      {loan.status !== 'Closed' && (
         <Card>
           <CardHeader><CardTitle className="text-base">Record Payment</CardTitle></CardHeader>
           <CardContent>
@@ -189,15 +231,7 @@ export default function LoanDetailPage() {
         </Card>
       )}
 
-      {/* Approval notes */}
-      {loan.approvalNotes && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">Approval Notes</CardTitle></CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">{loan.approvalNotes}</p>
-          </CardContent>
-        </Card>
-      )}
+      <EditLoanDialog loan={editingLoan} onClose={() => setEditingLoan(null)} />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { Coins } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Coins, Loader2 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,15 +13,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    const ok = login(email, password)
-    if (ok) {
-      navigate('/')
+    setSubmitting(true)
+    const err = await login(email, password)
+    setSubmitting(false)
+    if (err) {
+      setError(err)
     } else {
-      setError('Please enter a valid email address.')
+      navigate('/')
     }
   }
 
@@ -55,6 +58,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
+                  disabled={submitting}
                 />
               </div>
               <div className="space-y-1.5">
@@ -66,17 +70,15 @@ export default function LoginPage() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
+                  disabled={submitting}
                 />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button type="submit" className="w-full">Sign In</Button>
+              <Button type="submit" className="w-full" disabled={submitting}>
+                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Sign In
+              </Button>
             </form>
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{' '}
-              <Link to="/signup" className="text-amber-600 hover:underline font-medium">
-                Sign up
-              </Link>
-            </p>
           </CardContent>
         </Card>
       </div>

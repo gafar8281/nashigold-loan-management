@@ -96,10 +96,6 @@ export default function CustomerDetailPage() {
             <p className="text-xs text-muted-foreground">Customer Since</p>
             <p className="text-sm font-medium mt-0.5">{formatDate(customer.createdAt)}</p>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground">ID Proof</p>
-            <p className="text-sm font-medium mt-0.5 truncate text-amber-600">{customer.idProofUrl}</p>
-          </div>
         </CardContent>
       </Card>
 

@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { updatePassword } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
 import { useAuth } from '@/context/AuthContext'
 import {
   Dialog,
@@ -15,75 +17,84 @@ interface Props {
   onClose: () => void
 }
 
-// Rendered only when open — remounts on each open so state initialises fresh from user
+// Rendered only when open — remounts on each open so state initialises fresh.
 function UserSettingsForm({ onClose }: Props) {
-  const { user, updateUser } = useAuth()
+  const { user, isAdmin } = useAuth()
 
-  const [email, setEmail] = useState(user?.email ?? '')
-  const [branch, setBranch] = useState(user?.branch ?? '')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   function validate(): boolean {
     const next: Record<string, string> = {}
-    if (!email.trim()) next.email = 'Email is required.'
-    if (!branch.trim()) next.branch = 'Branch name is required.'
-    if (newPassword && newPassword !== confirmPassword) {
-      next.confirmPassword = 'Passwords do not match.'
-    }
+    if (!newPassword) next.newPassword = 'Enter a new password.'
+    else if (newPassword.length < 6) next.newPassword = 'Password must be at least 6 characters.'
+    if (newPassword !== confirmPassword) next.confirmPassword = 'Passwords do not match.'
     setErrors(next)
     return Object.keys(next).length === 0
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!validate()) return
-    updateUser({ email: email.trim(), branch: branch.trim() })
-    setSuccess(true)
-    setTimeout(onClose, 1500)
+    const current = auth.currentUser
+    if (!current) {
+      setErrors({ newPassword: 'Session expired. Please sign in again.' })
+      return
+    }
+    setSaving(true)
+    try {
+      await updatePassword(current, newPassword)
+      setSuccess(true)
+      setTimeout(onClose, 1500)
+    } catch (err) {
+      const code = (err as { code?: string }).code
+      setErrors({
+        newPassword:
+          code === 'auth/requires-recent-login'
+            ? 'Please sign out and back in, then try again.'
+            : 'Could not update password. Please try again.',
+      })
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
     <div className="space-y-4 py-2">
       {success && (
-        <p className="text-sm font-medium text-green-600">Settings saved successfully.</p>
+        <p className="text-sm font-medium text-green-600">Password updated successfully.</p>
       )}
 
       <div className="space-y-1">
-        <Label htmlFor="settings-email">Email</Label>
-        <Input
-          id="settings-email"
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          disabled={success}
-        />
-        {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+        <Label>Email</Label>
+        <Input value={user?.email ?? ''} disabled readOnly />
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="settings-branch">Branch Name</Label>
-        <Input
-          id="settings-branch"
-          type="text"
-          value={branch}
-          onChange={e => setBranch(e.target.value)}
-          disabled={success}
-        />
-        {errors.branch && <p className="text-xs text-destructive">{errors.branch}</p>}
+        <Label>{isAdmin ? 'Role' : 'Branch'}</Label>
+        <Input value={isAdmin ? 'Administrator' : user?.branchName ?? ''} disabled readOnly />
       </div>
+
+      {isAdmin && (
+        <div className="space-y-1">
+          <Label>Branch Name</Label>
+          <Input value={user?.branchName ?? ''} disabled readOnly />
+        </div>
+      )}
 
       <div className="space-y-1">
         <Label htmlFor="settings-password">New Password</Label>
         <Input
           id="settings-password"
           type="password"
-          placeholder="Leave blank to keep current"
+          placeholder="At least 6 characters"
           value={newPassword}
           onChange={e => setNewPassword(e.target.value)}
-          disabled={success}
+          disabled={success || saving}
         />
+        {errors.newPassword && <p className="text-xs text-destructive">{errors.newPassword}</p>}
       </div>
 
       <div className="space-y-1">
@@ -94,7 +105,7 @@ function UserSettingsForm({ onClose }: Props) {
           placeholder="Repeat new password"
           value={confirmPassword}
           onChange={e => setConfirmPassword(e.target.value)}
-          disabled={success}
+          disabled={success || saving}
         />
         {errors.confirmPassword && (
           <p className="text-xs text-destructive">{errors.confirmPassword}</p>
@@ -102,11 +113,11 @@ function UserSettingsForm({ onClose }: Props) {
       </div>
 
       <DialogFooter>
-        <Button variant="outline" onClick={onClose} disabled={success}>
+        <Button variant="outline" onClick={onClose} disabled={success || saving}>
           Cancel
         </Button>
-        <Button onClick={handleSave} disabled={success}>
-          Save
+        <Button onClick={handleSave} disabled={success || saving}>
+          {saving ? 'Saving…' : 'Save'}
         </Button>
       </DialogFooter>
     </div>
