@@ -99,7 +99,7 @@ export default function CustomerDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Loan history */}
+      {/* Loan history .com*/}
       <Card>
         <CardHeader><CardTitle className="text-base">Loan History ({loans.length})</CardTitle></CardHeader>
         <CardContent className="p-0">
