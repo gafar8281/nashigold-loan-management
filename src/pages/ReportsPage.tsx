@@ -39,6 +39,7 @@ export default function ReportsPage() {
     .filter(l => l.status !== 'Closed')
     .reduce((s, l) => s + l.remainingBalance, 0)
   const totalOverdueAmount = overdueLoans.reduce((s, l) => s + l.remainingBalance, 0)
+  const totalProfit = loans.reduce((s, l) => s + l.interestAmount + l.lateFee, 0)
 
   return (
     <div className="p-6 space-y-6">
@@ -240,7 +241,7 @@ export default function ReportsPage() {
             </Card>
             <Card>
               <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">Profit Amount</CardTitle></CardHeader>
-              <CardContent><p className="text-xl font-bold text-green-600">{formatCurrency(27000)}</p><p className="text-xs text-muted-foreground mt-0.5">Total profit amount</p></CardContent>
+              <CardContent><p className="text-xl font-bold text-green-600">{formatCurrency(totalProfit)}</p><p className="text-xs text-muted-foreground mt-0.5">Total profit amount</p></CardContent>
             </Card>
           </div>
 
