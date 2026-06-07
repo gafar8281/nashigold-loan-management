@@ -6,8 +6,8 @@ export function calcInterestAmount(loanAmount: number, interestRate: number, ter
   return loanAmount * (interestRate / 100) * termMonths
 }
 
-export function calcTotalRepayment(loanAmount: number, interestAmount: number, lateFee: number): number {
-  return loanAmount + interestAmount + lateFee
+export function calcTotalRepayment(loanAmount: number, interestAmount: number): number {
+  return loanAmount + interestAmount
 }
 
 export function calcRemainingBalance(totalRepayment: number, amountPaid: number): number {
@@ -35,4 +35,20 @@ export function resolveStatus(loan: Loan): LoanStatus {
 export function calcDaysOverdue(periodTo: string): number {
   const diff = Date.now() - new Date(periodTo).getTime()
   return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)))
+}
+
+export function calcMonthsOverdue(periodTo: string): number {
+  const diff = Date.now() - new Date(periodTo).getTime()
+  if (diff <= 0) return 0
+  return Math.max(1, Math.ceil(diff / MS_PER_MONTH))
+}
+
+export function calcEffectiveLateFee(
+  lateFeePerMonth: number,
+  periodTo: string,
+  status: LoanStatus,
+): number {
+  const rate = lateFeePerMonth ?? 0
+  if (!isOverdue(periodTo, status)) return 0
+  return rate * calcMonthsOverdue(periodTo)
 }

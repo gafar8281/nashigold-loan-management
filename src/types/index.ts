@@ -20,7 +20,7 @@ export interface Loan {
   goldWeight: number
   physicalBillNumber: string
   interestRate: number
-  lateFee: number
+  lateFeePerMonth: number
   amountPaid: number
   interestAmount: number
   totalRepayment: number

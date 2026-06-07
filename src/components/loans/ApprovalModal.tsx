@@ -83,10 +83,10 @@ export default function ApprovalModal({ open, loan, customer, onApprove, onRejec
                 <p className="text-xs text-muted-foreground">Interest</p>
                 <p className="font-semibold">{formatCurrency(loan.interestAmount)}</p>
               </div>
-              {loan.lateFee > 0 && (
+              {loan.lateFeePerMonth > 0 && (
                 <div>
-                  <p className="text-xs text-muted-foreground">Late Fee</p>
-                  <p className="font-semibold">{formatCurrency(loan.lateFee)}</p>
+                  <p className="text-xs text-muted-foreground">Monthly Late Fee (if overdue)</p>
+                  <p className="font-semibold text-muted-foreground">{formatCurrency(loan.lateFeePerMonth)}/mo</p>
                 </div>
               )}
             </div>

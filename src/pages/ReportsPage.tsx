@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import StatusBadge from '@/components/shared/StatusBadge'
 import TablePagination from '@/components/shared/TablePagination'
 import { formatCurrency, formatDate } from '@/lib/formatters'
-import { calcDaysOverdue } from '@/lib/calculations'
+import { calcDaysOverdue, calcEffectiveLateFee } from '@/lib/calculations'
 import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 50
@@ -39,7 +39,10 @@ export default function ReportsPage() {
     .filter(l => l.status !== 'Closed')
     .reduce((s, l) => s + l.remainingBalance, 0)
   const totalOverdueAmount = overdueLoans.reduce((s, l) => s + l.remainingBalance, 0)
-  const totalProfit = loans.reduce((s, l) => s + l.interestAmount + l.lateFee, 0)
+  const totalProfit = loans.reduce(
+    (s, l) => s + l.interestAmount + calcEffectiveLateFee(l.lateFeePerMonth, l.periodTo, l.status),
+    0
+  )
 
   return (
     <div className="p-6 space-y-6">

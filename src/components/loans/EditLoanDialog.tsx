@@ -33,7 +33,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
   const [physicalBillNumber, setPhysicalBillNumber] = useState('')
   const [loanAmount, setLoanAmount] = useState('')
   const [interestRate, setInterestRate] = useState('')
-  const [lateFee, setLateFee] = useState('0')
+  const [lateFeePerMonth, setLateFeePerMonth] = useState('0')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -45,7 +45,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
     setPhysicalBillNumber(loan.physicalBillNumber ?? '')
     setLoanAmount(String(loan.loanAmount))
     setInterestRate(String(loan.interestRate))
-    setLateFee(String(loan.lateFee))
+    setLateFeePerMonth(String(loan.lateFeePerMonth))
     setError(null)
   }, [loan])
 
@@ -56,10 +56,10 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
     const termMonths = calcTermMonths(periodFrom, periodTo)
     const amount = parseFloat(loanAmount)
     const rate = parseFloat(interestRate)
-    const fee = parseFloat(lateFee) || 0
+    const fee = parseFloat(lateFeePerMonth) || 0
     const weight = parseFloat(goldWeight)
     const interestAmount = calcInterestAmount(amount, rate, termMonths)
-    const totalRepayment = calcTotalRepayment(amount, interestAmount, fee)
+    const totalRepayment = calcTotalRepayment(amount, interestAmount)
     const remainingBalance = calcRemainingBalance(totalRepayment, loan.amountPaid)
 
     setSaving(true)
@@ -73,7 +73,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
         physicalBillNumber: physicalBillNumber.trim(),
         loanAmount: amount,
         interestRate: rate,
-        lateFee: fee,
+        lateFeePerMonth: fee,
         interestAmount,
         totalRepayment,
         remainingBalance,
@@ -167,14 +167,14 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="editLateFee">Late Fee (SAR)</Label>
+              <Label htmlFor="editLateFeePerMonth">Late Fee per Month (SAR)</Label>
               <Input
-                id="editLateFee"
+                id="editLateFeePerMonth"
                 type="number"
                 min="0"
                 step="0.01"
-                value={lateFee}
-                onChange={e => setLateFee(e.target.value)}
+                value={lateFeePerMonth}
+                onChange={e => setLateFeePerMonth(e.target.value)}
               />
             </div>
           </div>

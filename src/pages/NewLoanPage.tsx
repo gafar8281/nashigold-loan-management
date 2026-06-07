@@ -31,7 +31,7 @@ export default function NewLoanPage() {
     goldWeight: '',
     physicalBillNumber: '',
     interestRate: '5',
-    lateFee: '0',
+    lateFeePerMonth: '0',
   })
 
   const [customerSearch, setCustomerSearch] = useState('')
@@ -53,12 +53,12 @@ export default function NewLoanPage() {
   // Derived calculations
   const loanAmount = parseFloat(form.loanAmount) || 0
   const interestRate = parseFloat(form.interestRate) || 0
-  const lateFee = parseFloat(form.lateFee) || 0
+  const lateFeePerMonth = parseFloat(form.lateFeePerMonth) || 0
   const termMonths = form.periodFrom && form.periodTo
     ? calcTermMonths(form.periodFrom, form.periodTo)
     : 0
   const interestAmount = calcInterestAmount(loanAmount, interestRate, termMonths)
-  const totalRepayment = calcTotalRepayment(loanAmount, interestAmount, lateFee)
+  const totalRepayment = calcTotalRepayment(loanAmount, interestAmount)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -72,7 +72,7 @@ export default function NewLoanPage() {
       goldWeight: parseFloat(form.goldWeight) || 0,
       physicalBillNumber: form.physicalBillNumber.trim(),
       interestRate,
-      lateFee,
+      lateFeePerMonth,
       amountPaid: 0,
       interestAmount,
       totalRepayment,
@@ -198,8 +198,8 @@ export default function NewLoanPage() {
                   <Input id="interestRate" type="number" min="0" step="0.1" value={form.interestRate} onChange={e => set('interestRate', e.target.value)} required />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="lateFee">Late Fee (SAR)</Label>
-                  <Input id="lateFee" type="number" min="0" step="0.01" value={form.lateFee} onChange={e => set('lateFee', e.target.value)} />
+                  <Label htmlFor="lateFeePerMonth">Late Fee per Month</Label>
+                  <Input id="lateFeePerMonth" type="number" min="0" step="0.01" value={form.lateFeePerMonth} onChange={e => set('lateFeePerMonth', e.target.value)} />
                 </div>
               </div>
             </CardContent>
@@ -217,12 +217,6 @@ export default function NewLoanPage() {
                 <span className="text-muted-foreground">Interest ({interestRate}%)</span>
                 <span className="font-medium">{formatCurrency(interestAmount)}</span>
               </div>
-              {lateFee > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Late Fee</span>
-                  <span className="font-medium">{formatCurrency(lateFee)}</span>
-                </div>
-              )}
               <Separator />
               <div className="flex justify-between items-center">
                 <span className="font-medium">Total Repayment</span>
@@ -230,6 +224,9 @@ export default function NewLoanPage() {
               </div>
               {termMonths > 0 && (
                 <p className="text-xs text-muted-foreground pt-1">Over {termMonths} month{termMonths !== 1 ? 's' : ''}</p>
+              )}
+              {lateFeePerMonth > 0 && (
+                <p className="text-xs text-muted-foreground">Monthly Late Fee (if overdue): {formatCurrency(lateFeePerMonth)}/mo</p>
               )}
             </CardContent>
           </Card>

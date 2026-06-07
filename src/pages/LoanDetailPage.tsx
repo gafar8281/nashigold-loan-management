@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import StatusBadge from '@/components/shared/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/formatters'
-import { calcRemainingBalance, calcDaysOverdue, isOverdue } from '@/lib/calculations'
+import { calcRemainingBalance, calcDaysOverdue, isOverdue, calcEffectiveLateFee, calcMonthsOverdue } from '@/lib/calculations'
 import EditLoanDialog from '@/components/loans/EditLoanDialog'
 import type { Loan } from '@/types'
 
@@ -27,6 +27,10 @@ export default function LoanDetailPage() {
   const [saving, setSaving] = useState(false)
   const [editingLoan, setEditingLoan] = useState<Loan | null>(null)
 
+  const effectiveLateFee = loan ? calcEffectiveLateFee(loan.lateFeePerMonth, loan.periodTo, loan.status) : 0
+  const effectiveTotalRepayment = loan ? loan.totalRepayment + effectiveLateFee : 0
+  const effectiveOutstanding = loan ? Math.max(0, effectiveTotalRepayment - loan.amountPaid) : 0
+
   if (!loan) {
     return (
       <div className="p-6">
@@ -41,7 +45,7 @@ export default function LoanDetailPage() {
     const amount = parseFloat(paymentAmount)
     if (!amount || amount <= 0 || !loan) return
     const newAmountPaid = loan.amountPaid + amount
-    const newRemaining = calcRemainingBalance(loan.totalRepayment, newAmountPaid)
+    const newRemaining = calcRemainingBalance(effectiveTotalRepayment, newAmountPaid)
     setSaving(true)
     try {
       await updateLoan(loan.id, {
@@ -77,7 +81,7 @@ export default function LoanDetailPage() {
       `Loan Number: ${loan.id}`,
       `Due Date: ${formatDate(loan.periodTo)}`,
       `Days Overdue: ${daysOverdue} day(s)`,
-      `Outstanding Balance: ${formatCurrency(loan.remainingBalance)}`,
+      `Outstanding Balance: ${formatCurrency(effectiveOutstanding)}`,
       ``,
       `Please visit the branch or contact us to settle the outstanding amount.`,
     ].join('\n')
@@ -115,13 +119,13 @@ export default function LoanDetailPage() {
               Edit Loan
             </Button>
           )}
-          {canClose && loan.remainingBalance <= 0 && (
+          {canClose && effectiveOutstanding <= 0 && (
             <Button variant="outline" size="sm" className="gap-1.5 text-green-700 border-green-300" onClick={handleCloseLoan} disabled={saving}>
               <CheckCircle className="h-4 w-4" />
               Mark Closed
             </Button>
           )}
-          {canClose && loan.remainingBalance > 0 && (
+          {canClose && effectiveOutstanding > 0 && (
             <Button variant="outline" size="sm" onClick={handleCloseLoan} disabled={saving}>
               Close Loan
             </Button>
@@ -180,16 +184,24 @@ export default function LoanDetailPage() {
               <span className="text-muted-foreground">Interest</span>
               <span>{formatCurrency(loan.interestAmount)}</span>
             </div>
-            {loan.lateFee > 0 && (
+            {loan.lateFeePerMonth > 0 && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Late Fee</span>
-                <span className="text-red-600">{formatCurrency(loan.lateFee)}</span>
+                <span className="text-muted-foreground">
+                  {isOverdue(loan.periodTo, loan.status)
+                    ? `Late Fee (${calcMonthsOverdue(loan.periodTo)} month${calcMonthsOverdue(loan.periodTo) !== 1 ? 's' : ''})`
+                    : 'Monthly Late Fee (if overdue)'}
+                </span>
+                <span className={isOverdue(loan.periodTo, loan.status) ? 'text-red-600' : 'text-muted-foreground'}>
+                  {isOverdue(loan.periodTo, loan.status)
+                    ? formatCurrency(effectiveLateFee)
+                    : `${formatCurrency(loan.lateFeePerMonth)}/mo`}
+                </span>
               </div>
             )}
             <Separator />
             <div className="flex justify-between">
               <span className="text-muted-foreground">Total Repayment</span>
-              <span className="font-semibold">{formatCurrency(loan.totalRepayment)}</span>
+              <span className="font-semibold">{formatCurrency(effectiveTotalRepayment)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Amount Paid</span>
@@ -198,8 +210,8 @@ export default function LoanDetailPage() {
             <Separator />
             <div className="flex justify-between items-center">
               <span className="font-medium">Remaining Balance</span>
-              <span className={`text-lg font-bold ${loan.remainingBalance > 0 ? 'text-amber-600' : 'text-green-600'}`}>
-                {formatCurrency(loan.remainingBalance)}
+              <span className={`text-lg font-bold ${effectiveOutstanding > 0 ? 'text-amber-600' : 'text-green-600'}`}>
+                {formatCurrency(effectiveOutstanding)}
               </span>
             </div>
           </CardContent>
