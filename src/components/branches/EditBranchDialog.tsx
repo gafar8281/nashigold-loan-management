@@ -64,8 +64,8 @@ export default function EditBranchDialog({ branch, onClose }: Props) {
               required
             />
             <p className="text-xs text-muted-foreground">
-              Updating the email here changes the stored record only; the login email is
-              managed in Firebase Authentication.
+              This is the branch's login email. Changing it updates the credentials the
+              branch signs in with.
             </p>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

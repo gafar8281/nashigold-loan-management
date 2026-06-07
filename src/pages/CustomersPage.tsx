@@ -8,12 +8,16 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import AddCustomerDialog from '@/components/customers/AddCustomerDialog'
+import TablePagination from '@/components/shared/TablePagination'
 import { formatDate } from '@/lib/formatters'
+
+const PAGE_SIZE = 50
 
 export default function CustomersPage() {
   const { customers, getLoansByCustomerId } = useData()
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
+  const [page, setPage] = useState(1)
 
   const filtered = customers.filter(c => {
     const q = search.toLowerCase()
@@ -23,6 +27,9 @@ export default function CustomersPage() {
       c.id.toLowerCase().includes(q)
     )
   })
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="p-6 space-y-6">
@@ -45,7 +52,7 @@ export default function CustomersPage() {
               className="pl-9"
               placeholder="Search by name, ID number, or customer ID…"
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => { setSearch(e.target.value); setPage(1) }}
             />
           </div>
         </CardHeader>
@@ -63,14 +70,14 @@ export default function CustomersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length === 0 ? (
+              {paginated.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     No customers found
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map(customer => {
+                paginated.map(customer => {
                   const loans = getLoansByCustomerId(customer.id)
                   const activeCount = loans.filter(l => l.status === 'Active' || l.status === 'Overdue').length
                   return (
@@ -104,6 +111,14 @@ export default function CustomersPage() {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            page={page}
+            totalPages={totalPages}
+            totalItems={filtered.length}
+            pageSize={PAGE_SIZE}
+            onPrev={() => setPage(p => p - 1)}
+            onNext={() => setPage(p => p + 1)}
+          />
         </CardContent>
       </Card>
 

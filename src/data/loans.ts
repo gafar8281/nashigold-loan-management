@@ -4,6 +4,7 @@ export const initialLoans: Loan[] = [
   {
     id: 'LOAN-0001',
     customerId: 'CUST-0001',
+    branchId: null,
     periodFrom: '2024-01-15',
     periodTo: '2024-07-15',
     termMonths: 6,
@@ -22,6 +23,7 @@ export const initialLoans: Loan[] = [
   {
     id: 'LOAN-0002',
     customerId: 'CUST-0002',
+    branchId: null,
     periodFrom: '2024-02-01',
     periodTo: '2024-08-01',
     termMonths: 6,
@@ -40,6 +42,7 @@ export const initialLoans: Loan[] = [
   {
     id: 'LOAN-0003',
     customerId: 'CUST-0003',
+    branchId: null,
     periodFrom: '2023-10-01',
     periodTo: '2024-04-01',
     termMonths: 6,
@@ -58,6 +61,7 @@ export const initialLoans: Loan[] = [
   {
     id: 'LOAN-0004',
     customerId: 'CUST-0004',
+    branchId: null,
     periodFrom: '2023-06-01',
     periodTo: '2023-12-01',
     termMonths: 6,
@@ -76,6 +80,7 @@ export const initialLoans: Loan[] = [
   {
     id: 'LOAN-0005',
     customerId: 'CUST-0001',
+    branchId: null,
     periodFrom: '2023-01-10',
     periodTo: '2023-07-10',
     termMonths: 6,
@@ -94,6 +99,7 @@ export const initialLoans: Loan[] = [
   {
     id: 'LOAN-0006',
     customerId: 'CUST-0003',
+    branchId: null,
     periodFrom: '2023-03-15',
     periodTo: '2023-09-15',
     termMonths: 6,
@@ -112,6 +118,7 @@ export const initialLoans: Loan[] = [
   {
     id: 'LOAN-0007',
     customerId: 'CUST-0005',
+    branchId: null,
     periodFrom: '2024-03-01',
     periodTo: '2024-09-01',
     termMonths: 6,
@@ -130,6 +137,7 @@ export const initialLoans: Loan[] = [
   {
     id: 'LOAN-0008',
     customerId: 'CUST-0002',
+    branchId: null,
     periodFrom: '2024-02-20',
     periodTo: '2024-08-20',
     termMonths: 6,

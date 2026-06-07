@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import ApprovalModal from '@/components/loans/ApprovalModal'
 import {
   calcInterestAmount,
   calcTotalRepayment,
@@ -14,6 +15,7 @@ import {
   calcTermMonths,
 } from '@/lib/calculations'
 import { formatCurrency, todayISO } from '@/lib/formatters'
+import type { Loan } from '@/types'
 
 export default function NewLoanPage() {
   const { customers, addLoan } = useData()
@@ -33,6 +35,8 @@ export default function NewLoanPage() {
   })
 
   const [customerSearch, setCustomerSearch] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [pendingLoan, setPendingLoan] = useState<Omit<Loan, 'id' | 'createdAt' | 'branchId'> | null>(null)
   const [saving, setSaving] = useState(false)
 
   function set(field: string, value: string) {
@@ -56,32 +60,43 @@ export default function NewLoanPage() {
   const interestAmount = calcInterestAmount(loanAmount, interestRate, termMonths)
   const totalRepayment = calcTotalRepayment(loanAmount, interestAmount, lateFee)
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.customerId || !selectedCustomer) return
+    setPendingLoan({
+      customerId: form.customerId,
+      periodFrom: form.periodFrom,
+      periodTo: form.periodTo,
+      termMonths,
+      loanAmount,
+      goldWeight: parseFloat(form.goldWeight) || 0,
+      physicalBillNumber: form.physicalBillNumber.trim(),
+      interestRate,
+      lateFee,
+      amountPaid: 0,
+      interestAmount,
+      totalRepayment,
+      remainingBalance: calcRemainingBalance(totalRepayment, 0),
+      status: 'Active',
+    })
+    setShowModal(true)
+  }
 
+  async function handleApprove() {
+    if (!pendingLoan) return
     setSaving(true)
     try {
-      const saved = await addLoan({
-        customerId: form.customerId,
-        periodFrom: form.periodFrom,
-        periodTo: form.periodTo,
-        termMonths,
-        loanAmount,
-        goldWeight: parseFloat(form.goldWeight) || 0,
-        physicalBillNumber: form.physicalBillNumber.trim(),
-        interestRate,
-        lateFee,
-        amountPaid: 0,
-        interestAmount,
-        totalRepayment,
-        remainingBalance: calcRemainingBalance(totalRepayment, 0),
-        status: 'Active',
-      })
+      const saved = await addLoan(pendingLoan)
+      setShowModal(false)
       navigate(`/loans/${saved.id}`)
     } finally {
       setSaving(false)
     }
+  }
+
+  function handleReject() {
+    setShowModal(false)
+    setPendingLoan(null)
   }
 
   return (
@@ -220,10 +235,21 @@ export default function NewLoanPage() {
           </Card>
         </div>
 
-        <Button type="submit" size="lg" disabled={!form.customerId || saving}>
-          {saving ? 'Creating…' : 'Create Loan'}
+        <Button type="submit" size="lg" disabled={!form.customerId}>
+          Submit for Approval
         </Button>
       </form>
+
+      {showModal && pendingLoan && selectedCustomer && (
+        <ApprovalModal
+          open={showModal}
+          loan={{ ...pendingLoan, id: '', createdAt: '', branchId: null }}
+          customer={selectedCustomer}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          saving={saving}
+        />
+      )}
     </div>
   )
 }

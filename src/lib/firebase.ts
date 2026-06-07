@@ -1,6 +1,5 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,14 +12,6 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+// Firestore is the only Firebase service we use — authentication is handled
+// entirely against the `users` collection (see services/userService.ts).
 export const db = getFirestore(app);
-export const auth = getAuth(app);
-
-/**
- * Secondary Firebase app + auth instance. Used when the admin provisions a new
- * branch login: `createUserWithEmailAndPassword` signs the new user into
- * whichever auth instance it runs on, so we run it on `secondaryAuth` to avoid
- * booting the admin out of the primary session.
- */
-const secondaryApp = initializeApp(firebaseConfig, "Secondary");
-export const secondaryAuth = getAuth(secondaryApp);

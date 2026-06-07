@@ -1,14 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-} from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
-import { auth, db } from '@/lib/firebase'
+import { db } from '@/lib/firebase'
 import { bootstrapAdmin } from '@/lib/authBootstrap'
+import { findUserByEmail } from '@/services/userService'
 import type { AppUser } from '@/types'
+
+const SESSION_KEY = 'nashi.auth.uid'
 
 interface AuthContextValue {
   user: AppUser | null
@@ -23,38 +21,25 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-/** Read the Firestore `users/{uid}` profile, or null if it doesn't exist. */
+/**
+ * Read the Firestore `users/{uid}` document and map it to an `AppUser`, with the
+ * stored `password` stripped. Returns null if the document doesn't exist.
+ */
 async function fetchProfile(uid: string): Promise<AppUser | null> {
   const snap = await getDoc(doc(db, 'users', uid))
   if (!snap.exists()) return null
-  return { ...(snap.data() as Omit<AppUser, 'uid'>), uid }
-}
-
-function mapAuthError(err: unknown): string {
-  const code = (err as { code?: string }).code
-  switch (code) {
-    case 'auth/invalid-email':
-      return 'Please enter a valid email address.'
-    case 'auth/user-disabled':
-      return 'This account has been disabled.'
-    case 'auth/user-not-found':
-    case 'auth/wrong-password':
-    case 'auth/invalid-credential':
-      return 'Incorrect email or password.'
-    case 'auth/too-many-requests':
-      return 'Too many attempts. Please try again later.'
-    default:
-      return 'Sign in failed. Please try again.'
-  }
+  const { password: _omit, ...profile } = snap.data() as AppUser & { password?: string }
+  void _omit
+  return { ...profile, uid }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null)
   const [authReady, setAuthReady] = useState(false)
 
-  // `initializing` only tracks whether Firebase has fired the first auth-state
-  // event. It is used by ProtectedRoute to avoid flashing /login on refresh.
-  // Bootstrap runs independently in the background.
+  // `initializing` tracks whether the stored session has been restored yet. It
+  // is used by ProtectedRoute to avoid flashing /login on refresh. Bootstrap
+  // runs independently in the background.
   const initializing = !authReady
 
   // Bootstrap the Super Admin account silently in the background.
@@ -62,46 +47,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     bootstrapAdmin().catch(err => console.error('[AuthProvider] bootstrap failed:', err))
   }, [])
 
-  // Restore the session on refresh and keep `user` in sync with Firebase Auth.
+  // Restore the session on refresh from the persisted uid.
   useEffect(() => {
-    return onAuthStateChanged(auth, async firebaseUser => {
-      if (!firebaseUser) {
-        setUser(null)
-        setAuthReady(true)
-        return
+    let cancelled = false
+    async function restore() {
+      const uid = localStorage.getItem(SESSION_KEY)
+      if (uid) {
+        try {
+          const profile = await fetchProfile(uid)
+          if (cancelled) return
+          if (!profile || !profile.isActive) {
+            localStorage.removeItem(SESSION_KEY)
+            setUser(null)
+          } else {
+            setUser(profile)
+          }
+        } catch {
+          if (cancelled) return
+          localStorage.removeItem(SESSION_KEY)
+          setUser(null)
+        }
       }
-      const profile = await fetchProfile(firebaseUser.uid)
-      if (!profile || !profile.isActive) {
-        await signOut(auth)
-        setUser(null)
-      } else {
-        setUser(profile)
-      }
-      setAuthReady(true)
-    })
+      if (!cancelled) setAuthReady(true)
+    }
+    restore()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   async function login(email: string, password: string): Promise<string | null> {
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password)
-      const profile = await fetchProfile(cred.user.uid)
-      if (!profile) {
-        await signOut(auth)
-        return 'No profile found for this account. Contact your administrator.'
+      const record = await findUserByEmail(email)
+      if (!record || record.password !== password) {
+        return 'Incorrect email or password.'
       }
-      if (!profile.isActive) {
-        await signOut(auth)
+      if (!record.isActive) {
         return 'This account has been disabled.'
       }
+      const { password: _omit, id: _id, ...profile } = record
+      void _omit
+      void _id
+      localStorage.setItem(SESSION_KEY, record.uid)
       setUser(profile)
       return null
     } catch (err) {
-      return mapAuthError(err)
+      console.error('[AuthProvider] login failed:', err)
+      return 'Sign in failed. Please try again.'
     }
   }
 
   async function logout(): Promise<void> {
-    await signOut(auth)
+    localStorage.removeItem(SESSION_KEY)
     setUser(null)
   }
 

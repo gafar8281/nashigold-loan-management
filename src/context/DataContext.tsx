@@ -7,6 +7,7 @@ import { todayISO } from '@/lib/formatters'
 import { customerService } from '@/services/customerService'
 import { loanService } from '@/services/loanService'
 import { seedIfEmpty } from '@/lib/seed'
+import { useAuth } from '@/context/AuthContext'
 
 interface DataContextValue {
   customers: Customer[]
@@ -15,7 +16,7 @@ interface DataContextValue {
   error: string | null
   addCustomer: (data: Omit<Customer, 'id' | 'createdAt'>) => Promise<Customer>
   updateCustomer: (id: string, data: Partial<Customer>) => Promise<void>
-  addLoan: (data: Omit<Loan, 'id' | 'createdAt'>) => Promise<Loan>
+  addLoan: (data: Omit<Loan, 'id' | 'createdAt' | 'branchId'>) => Promise<Loan>
   updateLoan: (id: string, data: Partial<Loan>) => Promise<void>
   getCustomerById: (id: string) => Customer | undefined
   getLoanById: (id: string) => Loan | undefined
@@ -25,13 +26,22 @@ interface DataContextValue {
 const DataContext = createContext<DataContextValue | null>(null)
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
+  const { user, isAdmin } = useAuth()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [rawLoans, setRawLoans] = useState<Loan[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Live, derived view: overdue is computed on read, never stored.
-  const loans: Loan[] = rawLoans.map(l => ({ ...l, status: resolveStatus(l) }))
+  // Live, derived view: overdue is computed on read, never stored. `allLoans`
+  // is the full, unscoped set used for per-customer / per-id lookups (so a
+  // customer's complete loan history stays visible across branches).
+  const allLoans: Loan[] = rawLoans.map(l => ({ ...l, status: resolveStatus(l) }))
+
+  // Branch-scoped view exposed to the operational pages (Loans, Dashboard,
+  // Reports): admins see everything, branch users only their own branch.
+  const loans: Loan[] = isAdmin
+    ? allLoans
+    : allLoans.filter(l => (l.branchId ?? null) === user?.branchId)
 
   // Latest synced arrays, read inside async mutators for id generation without
   // re-subscribing on every change. Kept current in the snapshot callbacks below.
@@ -119,10 +129,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     await customerService.update(id, data)
   }
 
-  async function addLoan(data: Omit<Loan, 'id' | 'createdAt'>): Promise<Loan> {
+  async function addLoan(
+    data: Omit<Loan, 'id' | 'createdAt' | 'branchId'>,
+  ): Promise<Loan> {
     const newLoan: Loan = {
       ...data,
       id: nextLoanId(rawLoansRef.current),
+      // Stamp the creating user's branch (admin → null = admin-only).
+      branchId: user?.branchId ?? null,
       createdAt: todayISO(),
     }
     await loanService.setDoc(newLoan.id, newLoan)
@@ -137,12 +151,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return customers.find(c => c.id === id)
   }
 
+  // The two lookups below intentionally use the UNSCOPED `allLoans`: a
+  // customer's full loan history must stay visible regardless of branch, and
+  // loans opened from that history must resolve for branch users too.
   function getLoanById(id: string): Loan | undefined {
-    return loans.find(l => l.id === id)
+    return allLoans.find(l => l.id === id)
   }
 
   function getLoansByCustomerId(customerId: string): Loan[] {
-    return loans.filter(l => l.customerId === customerId)
+    return allLoans.filter(l => l.customerId === customerId)
   }
 
   return (

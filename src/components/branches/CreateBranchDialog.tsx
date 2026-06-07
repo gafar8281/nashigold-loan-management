@@ -33,6 +33,10 @@ export default function CreateBranchDialog({ open, onClose }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (form.password.length < 6) {
+      setError('Password must be at least 6 characters.')
+      return
+    }
     setSaving(true)
     setError(null)
     try {
@@ -40,16 +44,7 @@ export default function CreateBranchDialog({ open, onClose }: Props) {
       reset()
       onClose()
     } catch (err) {
-      const code = (err as { code?: string }).code
-      setError(
-        code === 'auth/email-already-in-use'
-          ? 'That email is already in use by another account.'
-          : code === 'auth/weak-password'
-            ? 'Password must be at least 6 characters.'
-            : code === 'auth/invalid-email'
-              ? 'Please enter a valid email address.'
-              : (err as Error).message || 'Failed to create branch.',
-      )
+      setError((err as Error).message || 'Failed to create branch.')
     } finally {
       setSaving(false)
     }

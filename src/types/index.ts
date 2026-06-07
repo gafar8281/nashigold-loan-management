@@ -12,6 +12,7 @@ export interface Customer {
 export interface Loan {
   id: string
   customerId: string
+  branchId: string | null   // owning branch; null = unassigned/legacy (admin-only)
   periodFrom: string
   periodTo: string
   termMonths: number

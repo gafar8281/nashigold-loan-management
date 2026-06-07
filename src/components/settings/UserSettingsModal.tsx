@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { updatePassword } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
+import { userService } from '@/services/userService'
 import { useAuth } from '@/context/AuthContext'
 import {
   Dialog,
@@ -38,24 +37,17 @@ function UserSettingsForm({ onClose }: Props) {
 
   async function handleSave() {
     if (!validate()) return
-    const current = auth.currentUser
-    if (!current) {
+    if (!user?.uid) {
       setErrors({ newPassword: 'Session expired. Please sign in again.' })
       return
     }
     setSaving(true)
     try {
-      await updatePassword(current, newPassword)
+      await userService.update(user.uid, { password: newPassword })
       setSuccess(true)
       setTimeout(onClose, 1500)
-    } catch (err) {
-      const code = (err as { code?: string }).code
-      setErrors({
-        newPassword:
-          code === 'auth/requires-recent-login'
-            ? 'Please sign out and back in, then try again.'
-            : 'Could not update password. Please try again.',
-      })
+    } catch {
+      setErrors({ newPassword: 'Could not update password. Please try again.' })
     } finally {
       setSaving(false)
     }

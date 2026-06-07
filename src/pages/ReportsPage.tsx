@@ -4,9 +4,12 @@ import { useData } from '@/context/DataContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import StatusBadge from '@/components/shared/StatusBadge'
+import TablePagination from '@/components/shared/TablePagination'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { calcDaysOverdue } from '@/lib/calculations'
 import { cn } from '@/lib/utils'
+
+const PAGE_SIZE = 50
 
 const TABS = [
   { id: 'active', label: 'Active Loans' },
@@ -18,10 +21,17 @@ const TABS = [
 export default function ReportsPage() {
   const { loans, getCustomerById } = useData()
   const [activeTab, setActiveTab] = useState('active')
+  const [activePage, setActivePage] = useState(1)
+  const [overduePage, setOverduePage] = useState(1)
+  const [closedPage, setClosedPage] = useState(1)
 
   const activeLoans = loans.filter(l => l.status === 'Active')
   const overdueLoans = loans.filter(l => l.status === 'Overdue')
   const closedLoans = loans.filter(l => l.status === 'Closed')
+
+  const paginatedActive = activeLoans.slice((activePage - 1) * PAGE_SIZE, activePage * PAGE_SIZE)
+  const paginatedOverdue = overdueLoans.slice((overduePage - 1) * PAGE_SIZE, overduePage * PAGE_SIZE)
+  const paginatedClosed = closedLoans.slice((closedPage - 1) * PAGE_SIZE, closedPage * PAGE_SIZE)
 
   const totalDisbursed = loans.reduce((s, l) => s + l.loanAmount, 0)
   const totalCollected = loans.reduce((s, l) => s + l.amountPaid, 0)
@@ -42,7 +52,7 @@ export default function ReportsPage() {
         {TABS.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => { setActiveTab(tab.id); setActivePage(1); setOverduePage(1); setClosedPage(1) }}
             className={cn(
               'px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors -mb-px',
               activeTab === tab.id
@@ -74,10 +84,10 @@ export default function ReportsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {activeLoans.length === 0 ? (
+                {paginatedActive.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No active loans</TableCell></TableRow>
                 ) : (
-                  activeLoans.map(loan => {
+                  paginatedActive.map(loan => {
                     const customer = getCustomerById(loan.customerId)
                     return (
                       <TableRow key={loan.id}>
@@ -93,6 +103,14 @@ export default function ReportsPage() {
                 )}
               </TableBody>
             </Table>
+            <TablePagination
+              page={activePage}
+              totalPages={Math.ceil(activeLoans.length / PAGE_SIZE)}
+              totalItems={activeLoans.length}
+              pageSize={PAGE_SIZE}
+              onPrev={() => setActivePage(p => p - 1)}
+              onNext={() => setActivePage(p => p + 1)}
+            />
           </CardContent>
         </Card>
       )}
@@ -116,10 +134,10 @@ export default function ReportsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {overdueLoans.length === 0 ? (
+                {paginatedOverdue.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No overdue loans</TableCell></TableRow>
                 ) : (
-                  overdueLoans.map(loan => {
+                  paginatedOverdue.map(loan => {
                     const customer = getCustomerById(loan.customerId)
                     const days = calcDaysOverdue(loan.periodTo)
                     return (
@@ -138,6 +156,14 @@ export default function ReportsPage() {
                 )}
               </TableBody>
             </Table>
+            <TablePagination
+              page={overduePage}
+              totalPages={Math.ceil(overdueLoans.length / PAGE_SIZE)}
+              totalItems={overdueLoans.length}
+              pageSize={PAGE_SIZE}
+              onPrev={() => setOverduePage(p => p - 1)}
+              onNext={() => setOverduePage(p => p + 1)}
+            />
           </CardContent>
         </Card>
       )}
@@ -161,10 +187,10 @@ export default function ReportsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {closedLoans.length === 0 ? (
+                {paginatedClosed.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No closed loans</TableCell></TableRow>
                 ) : (
-                  closedLoans.map(loan => {
+                  paginatedClosed.map(loan => {
                     const customer = getCustomerById(loan.customerId)
                     return (
                       <TableRow key={loan.id}>
@@ -180,6 +206,14 @@ export default function ReportsPage() {
                 )}
               </TableBody>
             </Table>
+            <TablePagination
+              page={closedPage}
+              totalPages={Math.ceil(closedLoans.length / PAGE_SIZE)}
+              totalItems={closedLoans.length}
+              pageSize={PAGE_SIZE}
+              onPrev={() => setClosedPage(p => p - 1)}
+              onNext={() => setClosedPage(p => p + 1)}
+            />
           </CardContent>
         </Card>
       )}

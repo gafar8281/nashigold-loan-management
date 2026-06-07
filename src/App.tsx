@@ -13,6 +13,7 @@ import NewLoanPage from '@/pages/NewLoanPage'
 import LoanDetailPage from '@/pages/LoanDetailPage'
 import ReportsPage from '@/pages/ReportsPage'
 import BranchesPage from '@/pages/BranchesPage'
+import BranchDetailPage from '@/pages/BranchDetailPage'
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
               <Route path="/reports" element={<ReportsPage />} />
               <Route element={<AdminRoute />}>
                 <Route path="/branches" element={<BranchesPage />} />
+                <Route path="/branches/:id" element={<BranchDetailPage />} />
               </Route>
             </Route>
           </Route>

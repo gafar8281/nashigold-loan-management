@@ -6,8 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import StatusBadge from '@/components/shared/StatusBadge'
+import TablePagination from '@/components/shared/TablePagination'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import type { LoanStatus } from '@/types'
+
+const PAGE_SIZE = 50
 
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'all', label: 'All Loans' },
@@ -20,10 +23,14 @@ const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
 export default function LoansPage() {
   const { loans, getCustomerById } = useData()
   const [statusFilter, setStatusFilter] = useState('all')
+  const [page, setPage] = useState(1)
 
   const filtered = statusFilter === 'all'
     ? loans
     : loans.filter(l => l.status === statusFilter)
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="p-6 space-y-6">
@@ -46,7 +53,7 @@ export default function LoansPage() {
             {STATUS_OPTIONS.map(opt => (
               <button
                 key={opt.value}
-                onClick={() => setStatusFilter(opt.value)}
+                onClick={() => { setStatusFilter(opt.value); setPage(1) }}
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   statusFilter === opt.value
                     ? 'bg-amber-500 text-white border-amber-500'
@@ -77,14 +84,14 @@ export default function LoansPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length === 0 ? (
+              {paginated.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     No loans found
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map(loan => {
+                paginated.map(loan => {
                   const customer = getCustomerById(loan.customerId)
                   return (
                     <TableRow key={loan.id}>
@@ -111,6 +118,14 @@ export default function LoansPage() {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            page={page}
+            totalPages={totalPages}
+            totalItems={filtered.length}
+            pageSize={PAGE_SIZE}
+            onPrev={() => setPage(p => p - 1)}
+            onNext={() => setPage(p => p + 1)}
+          />
         </CardContent>
       </Card>
     </div>
