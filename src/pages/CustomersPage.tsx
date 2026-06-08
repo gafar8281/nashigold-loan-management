@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useData } from '@/context/DataContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +16,7 @@ const PAGE_SIZE = 50
 
 export default function CustomersPage() {
   const { customers, getLoansByCustomerId } = useData()
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [page, setPage] = useState(1)
@@ -35,22 +37,22 @@ export default function CustomersPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Customers</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{customers.length} total customers</p>
+          <h1 className="text-2xl font-semibold">{t('customers.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('customers.subtitle', { count: customers.length })}</p>
         </div>
         <Button onClick={() => setShowAdd(true)}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          Add Customer
+          <Plus className="h-4 w-4 me-1.5" />
+          {t('customers.addCustomer')}
         </Button>
       </div>
 
       <Card>
         <CardHeader className="pb-3">
           <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              className="pl-9"
-              placeholder="Search by name, ID number, or customer ID…"
+              className="ps-9"
+              placeholder={t('customers.searchPlaceholder')}
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1) }}
             />
@@ -60,20 +62,20 @@ export default function CustomersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Customer ID</TableHead>
-                <TableHead>Full Name</TableHead>
-                <TableHead>ID Number</TableHead>
-                <TableHead>Mobile</TableHead>
-                <TableHead>Date of Birth</TableHead>
-                <TableHead>Active Loans</TableHead>
-                <TableHead>Member Since</TableHead>
+                <TableHead>{t('table.customerId')}</TableHead>
+                <TableHead>{t('table.fullName')}</TableHead>
+                <TableHead>{t('table.idNumber')}</TableHead>
+                <TableHead>{t('table.mobile')}</TableHead>
+                <TableHead>{t('table.dob')}</TableHead>
+                <TableHead>{t('table.activeLoans')}</TableHead>
+                <TableHead>{t('table.memberSince')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginated.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No customers found
+                    {t('customers.noFound')}
                   </TableCell>
                 </TableRow>
               ) : (

@@ -128,3 +128,7 @@
     @apply font-sans;
     }
 }
+
+html[dir="rtl"] {
+  font-family: 'Noto Sans Arabic', 'Cairo', sans-serif;
+}

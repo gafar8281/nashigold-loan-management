@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -11,20 +12,23 @@ import CreateBranchDialog from '@/components/branches/CreateBranchDialog'
 
 export default function BranchesPage() {
   const { branches, loading, error } = useBranches()
+  const { t } = useTranslation()
   const [showCreate, setShowCreate] = useState(false)
+
+  const countLabel = branches.length === 1
+    ? t('branches.countOne', { count: branches.length })
+    : t('branches.countOther', { count: branches.length })
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Branches</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {branches.length} {branches.length === 1 ? 'branch' : 'branches'}
-          </p>
+          <h1 className="text-2xl font-semibold">{t('branches.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{countLabel}</p>
         </div>
         <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          Add Branch
+          <Plus className="h-4 w-4 me-1.5" />
+          {t('branches.addBranch')}
         </Button>
       </div>
 
@@ -34,24 +38,24 @@ export default function BranchesPage() {
             <div className="p-6 text-sm text-destructive">{error}</div>
           ) : loading ? (
             <div className="flex items-center justify-center py-12 text-muted-foreground">
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Loading branches…
+              <Loader2 className="me-2 h-5 w-5 animate-spin" />
+              {t('branches.loading')}
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Branch Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
+                  <TableHead>{t('branches.branchName')}</TableHead>
+                  <TableHead>{t('branches.email')}</TableHead>
+                  <TableHead>{t('branches.status')}</TableHead>
+                  <TableHead>{t('branches.created')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {branches.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                      No branches yet. Create one to get started.
+                      {t('branches.noFound')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -66,11 +70,11 @@ export default function BranchesPage() {
                       <TableCell>
                         {branch.isActive ? (
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            Active
+                            {t('branches.active')}
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
-                            Disabled
+                            {t('branches.disabled')}
                           </Badge>
                         )}
                       </TableCell>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function CreateBranchDialog({ open, onClose }: Props) {
+  const { t } = useTranslation()
   const [form, setForm] = useState({ branchName: '', branchEmail: '', password: '' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +36,7 @@ export default function CreateBranchDialog({ open, onClose }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (form.password.length < 6) {
-      setError('Password must be at least 6 characters.')
+      setError(t('branches.errors.passwordTooShort'))
       return
     }
     setSaving(true)
@@ -44,7 +46,7 @@ export default function CreateBranchDialog({ open, onClose }: Props) {
       reset()
       onClose()
     } catch (err) {
-      setError((err as Error).message || 'Failed to create branch.')
+      setError((err as Error).message || t('branches.errors.createFailed'))
     } finally {
       setSaving(false)
     }
@@ -54,14 +56,12 @@ export default function CreateBranchDialog({ open, onClose }: Props) {
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create Branch</DialogTitle>
-          <DialogDescription>
-            This creates the branch and its login credentials.
-          </DialogDescription>
+          <DialogTitle>{t('branches.createTitle')}</DialogTitle>
+          <DialogDescription>{t('branches.createDesc')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="branchName">Branch Name</Label>
+            <Label htmlFor="branchName">{t('branches.branchName')}</Label>
             <Input
               id="branchName"
               value={form.branchName}
@@ -71,7 +71,7 @@ export default function CreateBranchDialog({ open, onClose }: Props) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="branchEmail">Branch Email (login)</Label>
+            <Label htmlFor="branchEmail">{t('branches.branchEmailLabel')}</Label>
             <Input
               id="branchEmail"
               type="email"
@@ -82,23 +82,23 @@ export default function CreateBranchDialog({ open, onClose }: Props) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="branchPassword">Password</Label>
+            <Label htmlFor="branchPassword">{t('branches.branchPassword')}</Label>
             <Input
               id="branchPassword"
               type="password"
               value={form.password}
               onChange={e => set('password', e.target.value)}
               required
-              placeholder="At least 6 characters"
+              placeholder={t('branches.branchPasswordPlaceholder')}
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? 'Creating…' : 'Create Branch'}
+              {saving ? t('common.creating') : t('branches.createTitle')}
             </Button>
           </DialogFooter>
         </form>

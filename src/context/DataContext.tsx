@@ -107,13 +107,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const dupMobile = customersRef.current.find(c => c.mobile   === data.mobile)
 
     if (dupId && dupMobile) {
-      throw new Error('A customer with this ID Number and Mobile Number already exists.')
+      throw new Error('يوجد بالفعل عميل يحمل رقم الهوية ورقم الهاتف المحمول هذا')
     }
     if (dupId) {
-      throw new Error('A customer with this ID Number already exists.')
+      throw new Error('يوجد بالفعل عميل يحمل رقم التعريف هذا')
     }
     if (dupMobile) {
-      throw new Error('A customer with this Mobile Number already exists.')
+      throw new Error('يوجد بالفعل عميل يحمل رقم الهاتف المحمول هذا')
     }
 
     const newCustomer: Customer = {

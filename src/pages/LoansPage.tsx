@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useData } from '@/context/DataContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -12,18 +13,19 @@ import type { LoanStatus } from '@/types'
 
 const PAGE_SIZE = 50
 
-const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: 'all', label: 'All Loans' },
-  { value: 'Active', label: 'Active' },
-  { value: 'Overdue', label: 'Overdue' },
-  { value: 'Approved', label: 'Approved' },
-  { value: 'Closed', label: 'Closed' },
-]
-
 export default function LoansPage() {
   const { loans, getCustomerById } = useData()
+  const { t } = useTranslation()
   const [statusFilter, setStatusFilter] = useState('all')
   const [page, setPage] = useState(1)
+
+  const statusOptions = [
+    { value: 'all', label: t('loans.allLoans') },
+    { value: 'Active', label: t('status.Active') },
+    { value: 'Overdue', label: t('status.Overdue') },
+    { value: 'Approved', label: t('status.Approved') },
+    { value: 'Closed', label: t('status.Closed') },
+  ]
 
   const filtered = statusFilter === 'all'
     ? loans
@@ -36,13 +38,13 @@ export default function LoansPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Loans</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{loans.length} total loans</p>
+          <h1 className="text-2xl font-semibold">{t('loans.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('loans.subtitle', { count: loans.length })}</p>
         </div>
         <Button asChild>
           <Link to="/loans/new">
-            <Plus className="h-4 w-4 mr-1.5" />
-            New Loan
+            <Plus className="h-4 w-4 me-1.5" />
+            {t('loans.newLoan')}
           </Link>
         </Button>
       </div>
@@ -50,7 +52,7 @@ export default function LoansPage() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex gap-2 flex-wrap">
-            {STATUS_OPTIONS.map(opt => (
+            {statusOptions.map(opt => (
               <button
                 key={opt.value}
                 onClick={() => { setStatusFilter(opt.value); setPage(1) }}
@@ -62,7 +64,7 @@ export default function LoansPage() {
               >
                 {opt.label}
                 {opt.value !== 'all' && (
-                  <span className="ml-1.5 opacity-70">
+                  <span className="ms-1.5 opacity-70">
                     {loans.filter(l => l.status === opt.value).length}
                   </span>
                 )}
@@ -74,20 +76,20 @@ export default function LoansPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Loan ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Loan Amount</TableHead>
-                <TableHead>Gold (g)</TableHead>
-                <TableHead>Period</TableHead>
-                <TableHead>Remaining</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t('table.loanId')}</TableHead>
+                <TableHead>{t('table.customer')}</TableHead>
+                <TableHead>{t('table.loanAmount')}</TableHead>
+                <TableHead>{t('table.goldGrams')}</TableHead>
+                <TableHead>{t('table.period')}</TableHead>
+                <TableHead>{t('table.remaining')}</TableHead>
+                <TableHead>{t('table.status')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginated.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No loans found
+                    {t('loans.noFound')}
                   </TableCell>
                 </TableRow>
               ) : (

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { userService } from '@/services/userService'
 import { useAuth } from '@/context/AuthContext'
 import {
@@ -16,9 +17,9 @@ interface Props {
   onClose: () => void
 }
 
-// Rendered only when open — remounts on each open so state initialises fresh.
 function UserSettingsForm({ onClose }: Props) {
   const { user, isAdmin } = useAuth()
+  const { t } = useTranslation()
 
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -28,9 +29,9 @@ function UserSettingsForm({ onClose }: Props) {
 
   function validate(): boolean {
     const next: Record<string, string> = {}
-    if (!newPassword) next.newPassword = 'Enter a new password.'
-    else if (newPassword.length < 6) next.newPassword = 'Password must be at least 6 characters.'
-    if (newPassword !== confirmPassword) next.confirmPassword = 'Passwords do not match.'
+    if (!newPassword) next.newPassword = t('settings.errors.required')
+    else if (newPassword.length < 6) next.newPassword = t('settings.errors.tooShort')
+    if (newPassword !== confirmPassword) next.confirmPassword = t('settings.errors.mismatch')
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -38,7 +39,7 @@ function UserSettingsForm({ onClose }: Props) {
   async function handleSave() {
     if (!validate()) return
     if (!user?.uid) {
-      setErrors({ newPassword: 'Session expired. Please sign in again.' })
+      setErrors({ newPassword: t('settings.errors.sessionExpired') })
       return
     }
     setSaving(true)
@@ -47,7 +48,7 @@ function UserSettingsForm({ onClose }: Props) {
       setSuccess(true)
       setTimeout(onClose, 1500)
     } catch {
-      setErrors({ newPassword: 'Could not update password. Please try again.' })
+      setErrors({ newPassword: t('settings.errors.updateFailed') })
     } finally {
       setSaving(false)
     }
@@ -56,32 +57,32 @@ function UserSettingsForm({ onClose }: Props) {
   return (
     <div className="space-y-4 py-2">
       {success && (
-        <p className="text-sm font-medium text-green-600">Password updated successfully.</p>
+        <p className="text-sm font-medium text-green-600">{t('settings.successMsg')}</p>
       )}
 
       <div className="space-y-1">
-        <Label>Email</Label>
+        <Label>{t('settings.email')}</Label>
         <Input value={user?.email ?? ''} disabled readOnly />
       </div>
 
       <div className="space-y-1">
-        <Label>{isAdmin ? 'Role' : 'Branch'}</Label>
-        <Input value={isAdmin ? 'Administrator' : user?.branchName ?? ''} disabled readOnly />
+        <Label>{isAdmin ? t('settings.role') : t('settings.branch')}</Label>
+        <Input value={isAdmin ? t('auth.administrator') : user?.branchName ?? ''} disabled readOnly />
       </div>
 
       {isAdmin && (
         <div className="space-y-1">
-          <Label>Branch Name</Label>
+          <Label>{t('settings.branchName')}</Label>
           <Input value={user?.branchName ?? ''} disabled readOnly />
         </div>
       )}
 
       <div className="space-y-1">
-        <Label htmlFor="settings-password">New Password</Label>
+        <Label htmlFor="settings-password">{t('settings.newPassword')}</Label>
         <Input
           id="settings-password"
           type="password"
-          placeholder="At least 6 characters"
+          placeholder={t('settings.newPasswordPlaceholder')}
           value={newPassword}
           onChange={e => setNewPassword(e.target.value)}
           disabled={success || saving}
@@ -90,11 +91,11 @@ function UserSettingsForm({ onClose }: Props) {
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="settings-confirm">Confirm Password</Label>
+        <Label htmlFor="settings-confirm">{t('settings.confirmPassword')}</Label>
         <Input
           id="settings-confirm"
           type="password"
-          placeholder="Repeat new password"
+          placeholder={t('settings.confirmPasswordPlaceholder')}
           value={confirmPassword}
           onChange={e => setConfirmPassword(e.target.value)}
           disabled={success || saving}
@@ -106,10 +107,10 @@ function UserSettingsForm({ onClose }: Props) {
 
       <DialogFooter>
         <Button variant="outline" onClick={onClose} disabled={success || saving}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button onClick={handleSave} disabled={success || saving}>
-          {saving ? 'Saving…' : 'Save'}
+          {saving ? t('settings.saving') : t('settings.save')}
         </Button>
       </DialogFooter>
     </div>
@@ -122,11 +123,12 @@ interface ModalProps {
 }
 
 export default function UserSettingsModal({ open, onClose }: ModalProps) {
+  const { t } = useTranslation()
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Account Settings</DialogTitle>
+          <DialogTitle>{t('settings.title')}</DialogTitle>
         </DialogHeader>
         {open && <UserSettingsForm onClose={onClose} />}
       </DialogContent>

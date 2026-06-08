@@ -80,10 +80,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const record = await findUserByEmail(email)
       if (!record || record.password !== password) {
-        return 'Incorrect email or password.'
+        return 'auth.errors.incorrectCredentials'
       }
       if (!record.isActive) {
-        return 'This account has been disabled.'
+        return 'auth.errors.accountDisabled'
       }
       const { password: _omit, id: _id, ...profile } = record
       void _omit
@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return null
     } catch (err) {
       console.error('[AuthProvider] login failed:', err)
-      return 'Sign in failed. Please try again.'
+      return 'auth.errors.signInFailed'
     }
   }
 

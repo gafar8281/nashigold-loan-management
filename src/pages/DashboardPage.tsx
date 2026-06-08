@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Landmark, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useData } from '@/context/DataContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -8,6 +9,7 @@ import { formatCurrency, formatDate } from '@/lib/formatters'
 
 export default function DashboardPage() {
   const { loans, customers, getCustomerById } = useData()
+  const { t } = useTranslation()
 
   const active = loans.filter(l => l.status === 'Active')
   const overdue = loans.filter(l => l.status === 'Overdue')
@@ -22,7 +24,7 @@ export default function DashboardPage() {
 
   const statCards = [
     {
-      title: 'Active Loans',
+      title: t('dashboard.activeLoans'),
       value: active.length,
       sub: formatCurrency(active.reduce((s, l) => s + l.loanAmount, 0)),
       icon: Landmark,
@@ -30,7 +32,7 @@ export default function DashboardPage() {
       bg: 'bg-green-50 dark:bg-green-950',
     },
     {
-      title: 'Overdue Loans',
+      title: t('dashboard.overdueLoans'),
       value: overdue.length,
       sub: formatCurrency(overdue.reduce((s, l) => s + l.remainingBalance, 0)),
       icon: AlertCircle,
@@ -38,17 +40,17 @@ export default function DashboardPage() {
       bg: 'bg-red-50 dark:bg-red-950',
     },
     {
-      title: 'Closed Loans',
+      title: t('dashboard.closedLoans'),
       value: closed.length,
-      sub: `${customers.length} total customers`,
+      sub: t('dashboard.totalCustomers', { count: customers.length }),
       icon: CheckCircle2,
       color: 'text-gray-500',
       bg: 'bg-gray-50 dark:bg-gray-800',
     },
     {
-      title: 'Total Portfolio',
+      title: t('dashboard.totalPortfolio'),
       value: formatCurrency(totalPortfolio),
-      sub: `${loans.filter(l => l.status !== 'Closed').length} open loans`,
+      sub: t('dashboard.openLoans', { count: loans.filter(l => l.status !== 'Closed').length }),
       icon: TrendingUp,
       color: 'text-amber-600',
       bg: 'bg-amber-50 dark:bg-amber-950',
@@ -59,8 +61,8 @@ export default function DashboardPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Branch overview and loan summary</p>
+        <h1 className="text-2xl font-semibold">{t('dashboard.title')}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t('dashboard.subtitle')}</p>
       </div>
 
       {/* Stat cards */}
@@ -79,7 +81,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         ))}
-        {/* Total Portfolio — spans 2 cols on medium+ */}
         {statCards.filter(c => c.wide).map(card => (
           <Card key={card.title} className="col-span-2 lg:col-span-4">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -99,18 +100,18 @@ export default function DashboardPage() {
       {/* Recent loans */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Recent Loans</CardTitle>
-          <Link to="/loans" className="text-sm text-amber-600 hover:underline">View all</Link>
+          <CardTitle className="text-base">{t('dashboard.recentLoans')}</CardTitle>
+          <Link to="/loans" className="text-sm text-amber-600 hover:underline">{t('dashboard.viewAll')}</Link>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Loan ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Period</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t('table.loanId')}</TableHead>
+                <TableHead>{t('table.customer')}</TableHead>
+                <TableHead>{t('table.amount')}</TableHead>
+                <TableHead>{t('table.period')}</TableHead>
+                <TableHead>{t('table.status')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

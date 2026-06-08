@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useData } from '@/context/DataContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -11,19 +12,20 @@ import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 50
 
-const TABS = [
-  { id: 'active', label: 'Active Loans' },
-  { id: 'overdue', label: 'Overdue Loans' },
-  { id: 'closed', label: 'Closed Loans' },
-  { id: 'summary', label: 'Branch Summary' },
-]
-
 export default function ReportsPage() {
   const { loans, getCustomerById } = useData()
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('active')
   const [activePage, setActivePage] = useState(1)
   const [overduePage, setOverduePage] = useState(1)
   const [closedPage, setClosedPage] = useState(1)
+
+  const tabs = [
+    { id: 'active', label: t('reports.activeLoans') },
+    { id: 'overdue', label: t('reports.overdueLoans') },
+    { id: 'closed', label: t('reports.closedLoans') },
+    { id: 'summary', label: t('reports.branchSummary') },
+  ]
 
   const activeLoans = loans.filter(l => l.status === 'Active')
   const overdueLoans = loans.filter(l => l.status === 'Overdue')
@@ -47,13 +49,13 @@ export default function ReportsPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Reports</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Branch loan reports and analytics</p>
+        <h1 className="text-2xl font-semibold">{t('reports.title')}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t('reports.subtitle')}</p>
       </div>
 
       {/* Tab bar */}
       <div className="flex gap-1 border-b overflow-x-auto">
-        {TABS.map(tab => (
+        {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => { setActiveTab(tab.id); setActivePage(1); setOverduePage(1); setClosedPage(1) }}
@@ -73,23 +75,23 @@ export default function ReportsPage() {
       {activeTab === 'active' && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Active Loans ({activeLoans.length})</CardTitle>
+            <CardTitle className="text-base">{t('reports.activeLoans')} ({activeLoans.length})</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Loan ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Loan Amount</TableHead>
-                  <TableHead>Period</TableHead> 
-                  <TableHead>Remaining Balance</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t('table.loanId')}</TableHead>
+                  <TableHead>{t('table.customer')}</TableHead>
+                  <TableHead>{t('table.loanAmount')}</TableHead>
+                  <TableHead>{t('table.period')}</TableHead>
+                  <TableHead>{t('table.remainingBalance')}</TableHead>
+                  <TableHead>{t('table.status')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedActive.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No active loans</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{t('reports.noActiveLoans')}</TableCell></TableRow>
                 ) : (
                   paginatedActive.map(loan => {
                     const customer = getCustomerById(loan.customerId)
@@ -123,23 +125,23 @@ export default function ReportsPage() {
       {activeTab === 'overdue' && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Overdue Loans ({overdueLoans.length})</CardTitle>
+            <CardTitle className="text-base">{t('reports.overdueLoans')} ({overdueLoans.length})</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Loan ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Loan Amount</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Days Overdue</TableHead>
-                  <TableHead>Remaining Balance</TableHead>
+                  <TableHead>{t('table.loanId')}</TableHead>
+                  <TableHead>{t('table.customer')}</TableHead>
+                  <TableHead>{t('table.loanAmount')}</TableHead>
+                  <TableHead>{t('table.dueDate')}</TableHead>
+                  <TableHead>{t('table.daysOverdue')}</TableHead>
+                  <TableHead>{t('table.remainingBalance')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedOverdue.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No overdue loans</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{t('reports.noOverdueLoans')}</TableCell></TableRow>
                 ) : (
                   paginatedOverdue.map(loan => {
                     const customer = getCustomerById(loan.customerId)
@@ -151,7 +153,7 @@ export default function ReportsPage() {
                         <TableCell>{formatCurrency(loan.loanAmount)}</TableCell>
                         <TableCell className="text-muted-foreground">{formatDate(loan.periodTo)}</TableCell>
                         <TableCell>
-                          <span className="text-red-600 font-medium">{days} day{days !== 1 ? 's' : ''}</span>
+                          <span className="text-red-600 font-medium">{days} {days !== 1 ? t('common.days') : t('common.day')}</span>
                         </TableCell>
                         <TableCell>{formatCurrency(loan.remainingBalance)}</TableCell>
                       </TableRow>
@@ -176,23 +178,23 @@ export default function ReportsPage() {
       {activeTab === 'closed' && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Closed Loans ({closedLoans.length})</CardTitle>
+            <CardTitle className="text-base">{t('reports.closedLoans')} ({closedLoans.length})</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Loan ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Loan Amount</TableHead>
-                  <TableHead>Total Repaid</TableHead>
-                  <TableHead>Period</TableHead>
-                  <TableHead>Created</TableHead>
+                  <TableHead>{t('table.loanId')}</TableHead>
+                  <TableHead>{t('table.customer')}</TableHead>
+                  <TableHead>{t('table.loanAmount')}</TableHead>
+                  <TableHead>{t('table.totalRepaid')}</TableHead>
+                  <TableHead>{t('table.period')}</TableHead>
+                  <TableHead>{t('table.created')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedClosed.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No closed loans</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{t('reports.noClosedLoans')}</TableCell></TableRow>
                 ) : (
                   paginatedClosed.map(loan => {
                     const customer = getCustomerById(loan.customerId)
@@ -227,29 +229,29 @@ export default function ReportsPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Card>
-              <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">Total Disbursed</CardTitle></CardHeader>
-              <CardContent><p className="text-xl font-bold">{formatCurrency(totalDisbursed)}</p><p className="text-xs text-muted-foreground mt-0.5">{loans.length} loans total</p></CardContent>
+              <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">{t('reports.totalDisbursed')}</CardTitle></CardHeader>
+              <CardContent><p className="text-xl font-bold">{formatCurrency(totalDisbursed)}</p><p className="text-xs text-muted-foreground mt-0.5">{t('reports.loansTotal', { count: loans.length })}</p></CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">Total Collected</CardTitle></CardHeader>
-              <CardContent><p className="text-xl font-bold text-green-700">{formatCurrency(totalCollected)}</p><p className="text-xs text-muted-foreground mt-0.5">{closedLoans.length} loans closed</p></CardContent>
+              <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">{t('reports.totalCollected')}</CardTitle></CardHeader>
+              <CardContent><p className="text-xl font-bold text-green-700">{formatCurrency(totalCollected)}</p><p className="text-xs text-muted-foreground mt-0.5">{t('reports.loansClosed', { count: closedLoans.length })}</p></CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">Outstanding Balance</CardTitle></CardHeader>
-              <CardContent><p className="text-xl font-bold text-amber-600">{formatCurrency(totalOutstanding)}</p><p className="text-xs text-muted-foreground mt-0.5">{loans.filter(l => l.status !== 'Closed').length} open loans</p></CardContent>
+              <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">{t('reports.outstandingBalance')}</CardTitle></CardHeader>
+              <CardContent><p className="text-xl font-bold text-amber-600">{formatCurrency(totalOutstanding)}</p><p className="text-xs text-muted-foreground mt-0.5">{t('reports.openLoans', { count: loans.filter(l => l.status !== 'Closed').length })}</p></CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">Overdue Amount</CardTitle></CardHeader>
-              <CardContent><p className="text-xl font-bold text-red-600">{formatCurrency(totalOverdueAmount)}</p><p className="text-xs text-muted-foreground mt-0.5">{overdueLoans.length} overdue loans</p></CardContent>
+              <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">{t('reports.overdueAmount')}</CardTitle></CardHeader>
+              <CardContent><p className="text-xl font-bold text-red-600">{formatCurrency(totalOverdueAmount)}</p><p className="text-xs text-muted-foreground mt-0.5">{t('reports.overdueLoansCount', { count: overdueLoans.length })}</p></CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">Profit Amount</CardTitle></CardHeader>
-              <CardContent><p className="text-xl font-bold text-green-600">{formatCurrency(totalProfit)}</p><p className="text-xs text-muted-foreground mt-0.5">Total profit amount</p></CardContent>
+              <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">{t('reports.profitAmount')}</CardTitle></CardHeader>
+              <CardContent><p className="text-xl font-bold text-green-600">{formatCurrency(totalProfit)}</p><p className="text-xs text-muted-foreground mt-0.5">{t('reports.totalProfitSub')}</p></CardContent>
             </Card>
           </div>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">Loan Status Breakdown</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t('reports.statusBreakdown')}</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
                 {(['Active', 'Overdue', 'Approved', 'Closed'] as const).map(status => {
@@ -261,7 +263,7 @@ export default function ReportsPage() {
                       <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                         <div className="h-full bg-amber-400 rounded-full" style={{ width: `${pct}%` }} />
                       </div>
-                      <span className="text-muted-foreground w-16 text-right">{count} ({pct}%)</span>
+                      <span className="text-muted-foreground w-16 text-end">{count} ({pct}%)</span>
                     </div>
                   )
                 })}

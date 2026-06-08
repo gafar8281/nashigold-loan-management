@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Pencil, Loader2, AlertCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useBranches } from '@/hooks/useBranches'
 import { setBranchActive } from '@/services/branchAdmin'
 import { Button } from '@/components/ui/button'
@@ -16,6 +17,7 @@ export default function BranchDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { branches, loading } = useBranches()
+  const { t } = useTranslation()
 
   const branch = branches.find(b => b.id === id) ?? null
 
@@ -39,8 +41,8 @@ export default function BranchDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin mr-2" />
-        Loading…
+        <Loader2 className="h-5 w-5 animate-spin me-2" />
+        {t('branches.loadingShort')}
       </div>
     )
   }
@@ -48,9 +50,9 @@ export default function BranchDetailPage() {
   if (!branch) {
     return (
       <div className="p-6">
-        <p className="text-muted-foreground">Branch not found.</p>
-        <Button variant="link" className="pl-0 mt-2" onClick={() => navigate('/branches')}>
-          Back to branches
+        <p className="text-muted-foreground">{t('branches.notFound')}</p>
+        <Button variant="link" className="ps-0 mt-2" onClick={() => navigate('/branches')}>
+          {t('branches.backToBranches')}
         </Button>
       </div>
     )
@@ -61,8 +63,8 @@ export default function BranchDetailPage() {
       {/* Back */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => navigate('/branches')}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Branches
+          <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" />
+          {t('branches.title')}
         </Button>
       </div>
 
@@ -74,8 +76,8 @@ export default function BranchDetailPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setEditing(true)} disabled={busy}>
-            <Pencil className="h-3.5 w-3.5 mr-1.5" />
-            Edit
+            <Pencil className="h-3.5 w-3.5 me-1.5" />
+            {t('common.edit')}
           </Button>
         </div>
       </div>
@@ -91,37 +93,37 @@ export default function BranchDetailPage() {
       {/* Details card */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Branch Details</CardTitle>
+          <CardTitle className="text-base">{t('branches.details')}</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div>
-            <p className="text-xs text-muted-foreground">Branch Name</p>
+            <p className="text-xs text-muted-foreground">{t('branches.branchName')}</p>
             <p className="text-sm font-medium mt-0.5">{branch.branchName}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Email</p>
+            <p className="text-xs text-muted-foreground">{t('branches.email')}</p>
             <p className="text-sm font-medium mt-0.5">{branch.branchEmail}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Status</p>
+            <p className="text-xs text-muted-foreground">{t('branches.status')}</p>
             <div className="mt-0.5">
               {branch.isActive ? (
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  Active
+                  {t('branches.active')}
                 </Badge>
               ) : (
                 <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
-                  Disabled
+                  {t('branches.disabled')}
                 </Badge>
               )}
             </div>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Created</p>
+            <p className="text-xs text-muted-foreground">{t('branches.created')}</p>
             <p className="text-sm font-medium mt-0.5">{formatDate(branch.createdAt.slice(0, 10))}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Last Updated</p>
+            <p className="text-xs text-muted-foreground">{t('branches.lastUpdated')}</p>
             <p className="text-sm font-medium mt-0.5">{formatDate(branch.updatedAt.slice(0, 10))}</p>
           </div>
         </CardContent>
@@ -130,22 +132,20 @@ export default function BranchDetailPage() {
       {/* Enable / Disable */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Branch Access</CardTitle>
+          <CardTitle className="text-base">{t('branches.access')}</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium">
-              {branch.isActive ? 'Branch is enabled' : 'Branch is disabled'}
+              {branch.isActive ? t('branches.isEnabled') : t('branches.isDisabled')}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {branch.isActive
-                ? 'Branch staff can log in and access the system.'
-                : 'Branch login is blocked. Re-enable to restore access.'}
+              {branch.isActive ? t('branches.enabledDesc') : t('branches.disabledDesc')}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="branch-active-switch" className="text-sm text-muted-foreground">
-              {branch.isActive ? 'Enabled' : 'Disabled'}
+              {branch.isActive ? t('branches.enabledLabel') : t('branches.disabledLabel')}
             </Label>
             <Switch
               id="branch-active-switch"

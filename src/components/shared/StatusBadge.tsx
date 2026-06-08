@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import type { LoanStatus } from '@/types'
 import { cn } from '@/lib/utils'
@@ -14,12 +15,13 @@ interface StatusBadgeProps {
 }
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
+  const { t } = useTranslation()
   return (
     <Badge
       variant="outline"
       className={cn('font-medium', statusStyles[status])}
     >
-      {status}
+      {t(`status.${status}`)}
     </Badge>
   )
 }

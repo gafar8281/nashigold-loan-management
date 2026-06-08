@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export default function ApprovalModal({ open, loan, customer, onApprove, onReject, saving }: Props) {
+  const { t } = useTranslation()
   const [notes, setNotes] = useState('')
 
   function handleApprove() {
@@ -39,7 +41,7 @@ export default function ApprovalModal({ open, loan, customer, onApprove, onRejec
     <Dialog open={open}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Loan Approval Review</DialogTitle>
+          <DialogTitle>{t('approval.title')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
@@ -47,27 +49,27 @@ export default function ApprovalModal({ open, loan, customer, onApprove, onRejec
           <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-xs text-muted-foreground">Customer</p>
+                <p className="text-xs text-muted-foreground">{t('approval.customer')}</p>
                 <p className="font-medium">{customer.fullName}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">ID Number</p>
+                <p className="text-xs text-muted-foreground">{t('approval.idNumber')}</p>
                 <p className="font-medium">{customer.idNumber}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Gold Weight</p>
+                <p className="text-xs text-muted-foreground">{t('approval.goldWeight')}</p>
                 <p className="font-medium">{loan.goldWeight}g</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Loan Term</p>
-                <p className="font-medium">{loan.termMonths} months</p>
+                <p className="text-xs text-muted-foreground">{t('approval.loanTerm')}</p>
+                <p className="font-medium">{loan.termMonths} {loan.termMonths === 1 ? t('common.month') : t('common.months')}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Period</p>
+                <p className="text-xs text-muted-foreground">{t('approval.period')}</p>
                 <p className="font-medium">{formatDate(loan.periodFrom)} – {formatDate(loan.periodTo)}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Interest Rate</p>
+                <p className="text-xs text-muted-foreground">{t('approval.interestRate')}</p>
                 <p className="font-medium">{loan.interestRate}%</p>
               </div>
             </div>
@@ -76,17 +78,17 @@ export default function ApprovalModal({ open, loan, customer, onApprove, onRejec
 
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-xs text-muted-foreground">Loan Amount</p>
+                <p className="text-xs text-muted-foreground">{t('approval.loanAmount')}</p>
                 <p className="font-semibold">{formatCurrency(loan.loanAmount)}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Interest</p>
+                <p className="text-xs text-muted-foreground">{t('approval.interest')}</p>
                 <p className="font-semibold">{formatCurrency(loan.interestAmount)}</p>
               </div>
               {loan.lateFeePerMonth > 0 && (
                 <div>
-                  <p className="text-xs text-muted-foreground">Monthly Late Fee (if overdue)</p>
-                  <p className="font-semibold text-muted-foreground">{formatCurrency(loan.lateFeePerMonth)}/mo</p>
+                  <p className="text-xs text-muted-foreground">{t('approval.lateFeeIfOverdue')}</p>
+                  <p className="font-semibold text-muted-foreground">{t('loans.lateFeeMonthly', { amount: formatCurrency(loan.lateFeePerMonth) })}</p>
                 </div>
               )}
             </div>
@@ -94,17 +96,17 @@ export default function ApprovalModal({ open, loan, customer, onApprove, onRejec
             <Separator />
 
             <div className="flex justify-between items-center">
-              <p className="text-sm font-medium">Total Repayment</p>
+              <p className="text-sm font-medium">{t('approval.totalRepayment')}</p>
               <p className="text-lg font-bold text-amber-600">{formatCurrency(loan.totalRepayment)}</p>
             </div>
           </div>
 
           {/* Notes */}
           <div className="space-y-1.5">
-            <Label htmlFor="approvalNotes">Approval Notes (optional)</Label>
+            <Label htmlFor="approvalNotes">{t('approval.notes')}</Label>
             <Textarea
               id="approvalNotes"
-              placeholder="Add any notes for this approval decision…"
+              placeholder={t('approval.notesPlaceholder')}
               value={notes}
               onChange={e => setNotes(e.target.value)}
               rows={3}
@@ -115,10 +117,10 @@ export default function ApprovalModal({ open, loan, customer, onApprove, onRejec
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="destructive" onClick={handleReject} disabled={saving}>
-            Reject
+            {t('approval.reject')}
           </Button>
           <Button className="bg-green-600 hover:bg-green-700" onClick={handleApprove} disabled={saving}>
-            {saving ? 'Saving…' : 'Approve Loan'}
+            {saving ? t('approval.saving') : t('approval.approve')}
           </Button>
         </DialogFooter>
       </DialogContent>

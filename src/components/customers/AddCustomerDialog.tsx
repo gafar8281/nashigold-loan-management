@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useData } from '@/context/DataContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +19,7 @@ interface Props {
 
 export default function AddCustomerDialog({ open, onClose }: Props) {
   const { addCustomer } = useData()
+  const { t } = useTranslation()
   const [form, setForm] = useState({
     fullName: '',
     idNumber: '',
@@ -61,29 +63,29 @@ export default function AddCustomerDialog({ open, onClose }: Props) {
     <Dialog open={open} onOpenChange={v => !v && handleClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Customer</DialogTitle>
+          <DialogTitle>{t('customers.addNew')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="fullName">Full Name</Label>
+            <Label htmlFor="fullName">{t('table.fullName')}</Label>
             <Input id="fullName" value={form.fullName} onChange={e => set('fullName', e.target.value)} required placeholder="Ahmed Al-Farsi" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="idNumber">ID Number</Label>
+            <Label htmlFor="idNumber">{t('table.idNumber')}</Label>
             <Input id="idNumber" value={form.idNumber} onChange={e => set('idNumber', e.target.value)} required placeholder="1023456789" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="dob">Date of Birth</Label>
+            <Label htmlFor="dob">{t('table.dob')}</Label>
             <Input id="dob" type="date" value={form.dateOfBirth} onChange={e => set('dateOfBirth', e.target.value)} required />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="mobile">Mobile</Label>
-            <Input id="mobile" value={form.mobile} onChange={e => set('mobile', e.target.value)} required placeholder="+966501234567" />
+            <Label htmlFor="mobile">{t('table.mobile')}</Label>
+            <Input id="mobile" value={form.mobile} onChange={e => set('mobile', e.target.value)} required placeholder="966501234567" />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose} disabled={saving}>Cancel</Button>
-            <Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Add Customer'}</Button>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={saving}>{t('common.cancel')}</Button>
+            <Button type="submit" disabled={saving}>{saving ? t('common.saving') : t('customers.addCustomer')}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

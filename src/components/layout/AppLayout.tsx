@@ -1,28 +1,29 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Users, Landmark, BarChart3, Building2, LogOut, Coins, Settings, Loader2, AlertCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useData } from '@/context/DataContext'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
 import UserSettingsModal from '@/components/settings/UserSettingsModal'
-
-const baseNavItems = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/customers', label: 'Customers', icon: Users, end: false },
-  { to: '/loans', label: 'Loans', icon: Landmark, end: false },
-  { to: '/reports', label: 'Reports', icon: BarChart3, end: false },
-]
-
-const adminNavItem = { to: '/branches', label: 'Branches', icon: Building2, end: false }
+import LanguageToggle from '@/components/layout/LanguageToggle'
 
 export default function AppLayout() {
   const { user, isAdmin, logout } = useAuth()
   const { loading, error } = useData()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [showSettings, setShowSettings] = useState(false)
 
+  const baseNavItems = [
+    { to: '/', label: t('nav.dashboard'), icon: LayoutDashboard, end: true },
+    { to: '/customers', label: t('nav.customers'), icon: Users, end: false },
+    { to: '/loans', label: t('nav.loans'), icon: Landmark, end: false },
+    { to: '/reports', label: t('nav.reports'), icon: BarChart3, end: false },
+  ]
+  const adminNavItem = { to: '/branches', label: t('nav.branches'), icon: Building2, end: false }
   const navItems = isAdmin ? [...baseNavItems, adminNavItem] : baseNavItems
 
   async function handleLogout() {
@@ -33,15 +34,15 @@ export default function AppLayout() {
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <aside className="flex w-60 flex-col border-r bg-card">
+      <aside className="flex w-60 flex-col border-e bg-card">
         {/* Logo */}
         <div className="flex items-center gap-2 px-5 py-5 border-b">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-500">
             <Coins className="h-5 w-5 text-white" />
           </div>
           <span className="font-semibold text-sm leading-tight">
-            Nashi Gold<br />
-            <span className="text-xs font-normal text-muted-foreground">Loan Management</span>
+            {t('auth.appName')}<br />
+            <span className="text-xs font-normal text-muted-foreground">{t('layout.loanManagement')}</span>
           </span>
         </div>
 
@@ -67,28 +68,31 @@ export default function AppLayout() {
           ))}
         </nav>
 
-        {/* User + logout */}
+        {/* User + actions */}
         <div className="border-t px-3 py-4">
-          <div className="mb-2 flex items-center gap-1 px-3">
+          <div className="mb-1 flex items-center gap-1 px-3">
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium truncate">{user?.email}</p>
               <p className="text-xs text-muted-foreground truncate">
-                {isAdmin ? 'Administrator' : user?.branchName}
+                {isAdmin ? t('auth.administrator') : user?.branchName}
               </p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 shrink-0 text-muted-foreground"
-              onClick={() => setShowSettings(true)}
-              title="Account Settings"
-            >
-              <Settings className="h-3.5 w-3.5" />
-            </Button>
+            <div className="flex items-center gap-0.5 shrink-0">
+              <LanguageToggle />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground"
+                onClick={() => setShowSettings(true)}
+                title={t('auth.accountSettings')}
+              >
+                <Settings className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
           <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
-            Sign Out
+            {t('nav.signOut')}
           </Button>
         </div>
         <UserSettingsModal open={showSettings} onClose={() => setShowSettings(false)} />
@@ -100,14 +104,14 @@ export default function AppLayout() {
           <div className="p-6">
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Couldn't load data</AlertTitle>
+              <AlertTitle>{t('layout.errorTitle')}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           </div>
         ) : loading ? (
           <div className="flex h-full items-center justify-center text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-            Loading data…
+            <Loader2 className="h-5 w-5 animate-spin me-2" />
+            {t('layout.loadingData')}
           </div>
         ) : (
           <Outlet />

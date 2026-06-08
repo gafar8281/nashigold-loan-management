@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,6 +27,7 @@ interface Props {
 
 export default function EditLoanDialog({ loan, onClose }: Props) {
   const { updateLoan } = useData()
+  const { t } = useTranslation()
 
   const [periodFrom, setPeriodFrom] = useState('')
   const [periodTo, setPeriodTo] = useState('')
@@ -90,12 +92,12 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
     <Dialog open={!!loan} onOpenChange={v => !v && onClose()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Edit Loan — {loan?.id}</DialogTitle>
+          <DialogTitle>{t('loans.editLoan')} — {loan?.id}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="editPeriodFrom">Period From</Label>
+              <Label htmlFor="editPeriodFrom">{t('loans.periodFrom')}</Label>
               <Input
                 id="editPeriodFrom"
                 type="date"
@@ -105,7 +107,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="editPeriodTo">Period To</Label>
+              <Label htmlFor="editPeriodTo">{t('loans.periodTo')}</Label>
               <Input
                 id="editPeriodTo"
                 type="date"
@@ -118,7 +120,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="editGoldWeight">Gold Weight (g)</Label>
+              <Label htmlFor="editGoldWeight">{t('loans.goldWeightDisplay')}</Label>
               <Input
                 id="editGoldWeight"
                 type="number"
@@ -130,18 +132,18 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="editPhysicalBillNumber">Physical Bill Number</Label>
+              <Label htmlFor="editPhysicalBillNumber">{t('loans.physicalBillNo')}</Label>
               <Input
                 id="editPhysicalBillNumber"
                 value={physicalBillNumber}
                 onChange={e => setPhysicalBillNumber(e.target.value)}
-                placeholder="e.g. BILL-0001"
+                placeholder={t('loans.physicalBillPlaceholder')}
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="editLoanAmount">Loan Amount (SAR)</Label>
+            <Label htmlFor="editLoanAmount">{t('loans.loanAmountLabel')}</Label>
             <Input
               id="editLoanAmount"
               type="number"
@@ -155,7 +157,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="editInterestRate">Interest Rate (%)</Label>
+              <Label htmlFor="editInterestRate">{t('loans.interestRateLabel')}</Label>
               <Input
                 id="editInterestRate"
                 type="number"
@@ -167,7 +169,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="editLateFeePerMonth">Late Fee per Month (SAR)</Label>
+              <Label htmlFor="editLateFeePerMonth">{t('loans.lateFeeLabel')} (SAR)</Label>
               <Input
                 id="editLateFeePerMonth"
                 type="number"
@@ -180,7 +182,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label>Status</Label>
+            <Label>{t('table.status')}</Label>
             <div className="flex items-center h-9 px-3 rounded-md border border-input bg-muted/40">
               {loan && <StatusBadge status={loan.status} />}
             </div>
@@ -190,10 +192,10 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? 'Saving…' : 'Save Changes'}
+              {saving ? t('common.saving') : t('common.saveChanges')}
             </Button>
           </DialogFooter>
         </form>

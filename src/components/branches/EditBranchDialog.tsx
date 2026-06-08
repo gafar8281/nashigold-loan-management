@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function EditBranchDialog({ branch, onClose }: Props) {
+  const { t } = useTranslation()
   const [branchName, setBranchName] = useState(branch?.branchName ?? '')
   const [branchEmail, setBranchEmail] = useState(branch?.branchEmail ?? '')
   const [saving, setSaving] = useState(false)
@@ -32,7 +34,7 @@ export default function EditBranchDialog({ branch, onClose }: Props) {
       await updateBranch(branch.id, { branchName, branchEmail })
       onClose()
     } catch (err) {
-      setError((err as Error).message || 'Failed to update branch.')
+      setError((err as Error).message || t('branches.errors.updateFailed'))
     } finally {
       setSaving(false)
     }
@@ -42,11 +44,11 @@ export default function EditBranchDialog({ branch, onClose }: Props) {
     <Dialog open={!!branch} onOpenChange={v => !v && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Branch</DialogTitle>
+          <DialogTitle>{t('branches.editTitle')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="editBranchName">Branch Name</Label>
+            <Label htmlFor="editBranchName">{t('branches.branchName')}</Label>
             <Input
               id="editBranchName"
               value={branchName}
@@ -55,7 +57,7 @@ export default function EditBranchDialog({ branch, onClose }: Props) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="editBranchEmail">Branch Email</Label>
+            <Label htmlFor="editBranchEmail">{t('branches.email')}</Label>
             <Input
               id="editBranchEmail"
               type="email"
@@ -64,17 +66,16 @@ export default function EditBranchDialog({ branch, onClose }: Props) {
               required
             />
             <p className="text-xs text-muted-foreground">
-              This is the branch's login email. Changing it updates the credentials the
-              branch signs in with.
+              {t('branches.branchEmailNote')}
             </p>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? 'Saving…' : 'Save Changes'}
+              {saving ? t('common.saving') : t('common.saveChanges')}
             </Button>
           </DialogFooter>
         </form>
