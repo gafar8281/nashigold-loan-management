@@ -6,7 +6,6 @@ import { nextCustomerId, nextLoanId } from '@/lib/idGen'
 import { todayISO } from '@/lib/formatters'
 import { customerService } from '@/services/customerService'
 import { loanService } from '@/services/loanService'
-import { seedIfEmpty } from '@/lib/seed'
 import { useAuth } from '@/context/AuthContext'
 
 interface DataContextValue {
@@ -66,14 +65,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
 
     async function init() {
-      try {
-        await seedIfEmpty()
-      } catch (err) {
-        handleError(err as Error)
-        return
-      }
-      if (cancelled) return
-
       unsubCustomers = customerService.subscribe(items => {
         if (cancelled) return
         customersRef.current = items

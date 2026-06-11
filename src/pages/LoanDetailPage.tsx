@@ -28,6 +28,8 @@ export default function LoanDetailPage() {
   const [paymentAmount, setPaymentAmount] = useState('')
   const [saving, setSaving] = useState(false)
   const [editingLoan, setEditingLoan] = useState<Loan | null>(null)
+  const [closeError, setCloseError] = useState(false)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
 
   const effectiveLateFee = loan ? calcEffectiveLateFee(loan.lateFeePerMonth, loan.periodTo, loan.status) : 0
   const effectiveTotalRepayment = loan ? loan.totalRepayment + effectiveLateFee : 0
@@ -46,6 +48,10 @@ export default function LoanDetailPage() {
     e.preventDefault()
     const amount = parseFloat(paymentAmount)
     if (!amount || amount <= 0 || !loan) return
+    if (amount > effectiveOutstanding) {
+      setPaymentError(t('loans.paymentExceedsBalance', { amount: formatCurrency(effectiveOutstanding) }))
+      return
+    }
     const newAmountPaid = loan.amountPaid + amount
     const newRemaining = calcRemainingBalance(effectiveTotalRepayment, newAmountPaid)
     setSaving(true)
@@ -55,6 +61,8 @@ export default function LoanDetailPage() {
         remainingBalance: newRemaining,
       })
       setPaymentAmount('')
+      setCloseError(false)
+      setPaymentError(null)
     } finally {
       setSaving(false)
     }
@@ -62,6 +70,10 @@ export default function LoanDetailPage() {
 
   async function handleCloseLoan() {
     if (!loan) return
+    if (effectiveOutstanding > 0) {
+      setCloseError(true)
+      return
+    }
     setSaving(true)
     try {
       await updateLoan(loan.id, { status: 'Closed' })
@@ -125,19 +137,26 @@ export default function LoanDetailPage() {
               {t('loans.editLoan')}
             </Button>
           )}
-          {canClose && effectiveOutstanding <= 0 && (
-            <Button variant="outline" size="sm" className="gap-1.5 text-green-700 border-green-300" onClick={handleCloseLoan} disabled={saving}>
+          {canClose && (
+            <Button
+              variant="outline"
+              size="sm"
+              className={`gap-1.5 ${effectiveOutstanding <= 0 ? 'text-green-700 border-green-300' : ''}`}
+              onClick={handleCloseLoan}
+              disabled={saving}
+            >
               <CheckCircle className="h-4 w-4" />
-              {t('loans.markClosed')}
-            </Button>
-          )}
-          {canClose && effectiveOutstanding > 0 && (
-            <Button variant="outline" size="sm" onClick={handleCloseLoan} disabled={saving}>
-              {t('loans.closeLoan')}
+              {effectiveOutstanding <= 0 ? t('loans.markClosed') : t('loans.closeLoan')}
             </Button>
           )}
         </div>
       </div>
+
+      {closeError && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+          {t('loans.cannotClose', { amount: formatCurrency(effectiveOutstanding) })}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Loan details */}
@@ -239,9 +258,12 @@ export default function LoanDetailPage() {
                   step="0.01"
                   placeholder="0.00"
                   value={paymentAmount}
-                  onChange={e => setPaymentAmount(e.target.value)}
+                  onChange={e => { setPaymentAmount(e.target.value); setPaymentError(null) }}
                   required
                 />
+                {paymentError && (
+                  <p className="text-sm text-red-600">{paymentError}</p>
+                )}
               </div>
               <Button type="submit" disabled={saving}>
                 {saving ? t('common.saving') : t('loans.recordPayment')}

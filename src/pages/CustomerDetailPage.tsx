@@ -22,7 +22,7 @@ export default function CustomerDetailPage() {
   const loans = getLoansByCustomerId(id!)
 
   const [editOpen, setEditOpen] = useState(false)
-  const [editForm, setEditForm] = useState({ fullName: '', mobile: '', dateOfBirth: '' })
+  const [editForm, setEditForm] = useState({ fullName: '', mobile: '', dateOfBirth: '', idCopyNumber: '', idExpiryDate: '' })
 
   if (!customer) {
     return (
@@ -36,7 +36,7 @@ export default function CustomerDetailPage() {
   }
 
   function openEdit() {
-    setEditForm({ fullName: customer!.fullName, mobile: customer!.mobile, dateOfBirth: customer!.dateOfBirth })
+    setEditForm({ fullName: customer!.fullName, mobile: customer!.mobile, dateOfBirth: customer!.dateOfBirth, idCopyNumber: customer!.idCopyNumber ?? '', idExpiryDate: customer!.idExpiryDate ?? '' })
     setEditOpen(true)
   }
 
@@ -85,6 +85,14 @@ export default function CustomerDetailPage() {
           <div>
             <p className="text-xs text-muted-foreground">{t('table.idNumber')}</p>
             <p className="text-sm font-medium mt-0.5">{customer.idNumber}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">{t('table.idCopyNumber')}</p>
+            <p className="text-sm font-medium mt-0.5">{customer.idCopyNumber ?? '—'}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">{t('table.idExpiryDate')}</p>
+            <p className="text-sm font-medium mt-0.5">{customer.idExpiryDate ? formatDate(customer.idExpiryDate) : '—'}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">{t('table.dob')}</p>
@@ -154,6 +162,14 @@ export default function CustomerDetailPage() {
             <div className="space-y-1.5">
               <Label>{t('table.mobile')}</Label>
               <Input value={editForm.mobile} onChange={e => setEditForm(p => ({ ...p, mobile: e.target.value }))} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('table.idCopyNumber')}</Label>
+              <Input value={editForm.idCopyNumber} onChange={e => setEditForm(p => ({ ...p, idCopyNumber: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('table.idExpiryDate')}</Label>
+              <Input type="date" value={editForm.idExpiryDate} onChange={e => setEditForm(p => ({ ...p, idExpiryDate: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
               <Label>{t('table.dob')}</Label>
