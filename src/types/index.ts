@@ -5,7 +5,6 @@ export interface Customer {
   fullName: string
   idNumber: string
   idCopyNumber?: string
-  idExpiryDate?: string
   dateOfBirth: string
   mobile: string
   createdAt: string

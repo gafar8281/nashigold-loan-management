@@ -124,8 +124,8 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
               <Input
                 id="editGoldWeight"
                 type="number"
-                min="0.01"
-                step="0.01"
+                min="0.001"
+                step="0.001"
                 value={goldWeight}
                 onChange={e => setGoldWeight(e.target.value)}
                 required

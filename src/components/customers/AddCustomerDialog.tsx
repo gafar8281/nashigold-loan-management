@@ -24,7 +24,6 @@ export default function AddCustomerDialog({ open, onClose }: Props) {
     fullName: '',
     idNumber: '',
     idCopyNumber: '',
-    idExpiryDate: '',
     dateOfBirth: '',
     mobile: '',
   })
@@ -36,7 +35,7 @@ export default function AddCustomerDialog({ open, onClose }: Props) {
   }
 
   function handleClose() {
-    setForm({ fullName: '', idNumber: '', idCopyNumber: '', idExpiryDate: '', dateOfBirth: '', mobile: '' })
+    setForm({ fullName: '', idNumber: '', idCopyNumber: '', dateOfBirth: '', mobile: '' })
     setError(null)
     onClose()
   }
@@ -50,11 +49,10 @@ export default function AddCustomerDialog({ open, onClose }: Props) {
         fullName: form.fullName,
         idNumber: form.idNumber,
         idCopyNumber: form.idCopyNumber,
-        idExpiryDate: form.idExpiryDate,
         dateOfBirth: form.dateOfBirth,
         mobile: form.mobile,
       })
-      setForm({ fullName: '', idNumber: '', idCopyNumber: '', idExpiryDate: '', dateOfBirth: '', mobile: '' })
+      setForm({ fullName: '', idNumber: '', idCopyNumber: '', dateOfBirth: '', mobile: '' })
       onClose()
     } catch (err) {
       setError((err as Error).message || 'Failed to save customer.')
@@ -81,10 +79,6 @@ export default function AddCustomerDialog({ open, onClose }: Props) {
           <div className="space-y-1.5">
             <Label htmlFor="idCopyNumber">{t('table.idCopyNumber')}</Label>
             <Input id="idCopyNumber" value={form.idCopyNumber} onChange={e => set('idCopyNumber', e.target.value)} required placeholder="C-123456" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="idExpiryDate">{t('table.idExpiryDate')}</Label>
-            <Input id="idExpiryDate" type="date" value={form.idExpiryDate} onChange={e => set('idExpiryDate', e.target.value)} required />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="dob">{t('table.dob')}</Label>

@@ -187,7 +187,7 @@ export default function NewLoanPage() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="goldWeight">{t('loans.goldWeightLabel')}</Label>
-                <Input id="goldWeight" type="number" min="0.1" step="0.1" value={form.goldWeight} onChange={e => set('goldWeight', e.target.value)} required placeholder="50" />
+                <Input id="goldWeight" type="number" min="0.001" step="0.001" value={form.goldWeight} onChange={e => set('goldWeight', e.target.value)} required placeholder="50" />
               </div>
 
               <div className="space-y-1.5">
