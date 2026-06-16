@@ -162,7 +162,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
                 id="editInterestRate"
                 type="number"
                 min="0"
-                step="0.01"
+                step="0.001"
                 value={interestRate}
                 onChange={e => setInterestRate(e.target.value)}
                 required
