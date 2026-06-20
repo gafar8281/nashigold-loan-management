@@ -198,7 +198,7 @@ export default function NewLoanPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="interestRate">{t('loans.interestRateLabel')}</Label>
-                  <Input id="interestRate" type="number" min="0" step="0.1" value={form.interestRate} onChange={e => set('interestRate', e.target.value)} required />
+                  <Input id="interestRate" type="number" min="0" step="0.001" value={form.interestRate} onChange={e => set('interestRate', e.target.value)} required />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="lateFeePerMonth">{t('loans.lateFeeLabel')}</Label>
