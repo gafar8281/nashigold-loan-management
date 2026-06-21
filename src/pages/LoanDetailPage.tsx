@@ -192,7 +192,11 @@ export default function LoanDetailPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t('table.interestRate')}</span>
-              <span>{loan.interestRate}%</span>
+              <span>
+                {loan.interestType === 'fixed'
+                  ? `${formatCurrency(loan.interestRate)} (${t('loans.interestTypeFixed')})`
+                  : `${loan.interestRate}%`}
+              </span>
             </div>
           </CardContent>
         </Card>

@@ -16,7 +16,7 @@ import {
   calcTermMonths,
 } from '@/lib/calculations'
 import { formatCurrency, todayISO } from '@/lib/formatters'
-import type { Loan } from '@/types'
+import type { InterestType, Loan } from '@/types'
 
 export default function NewLoanPage() {
   const { customers, addLoan } = useData()
@@ -35,6 +35,7 @@ export default function NewLoanPage() {
     interestRate: '5',
     lateFeePerMonth: '0',
   })
+  const [interestType, setInterestType] = useState<InterestType>('percentage')
 
   const [customerSearch, setCustomerSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
@@ -58,7 +59,7 @@ export default function NewLoanPage() {
   const termMonths = form.periodFrom && form.periodTo
     ? calcTermMonths(form.periodFrom, form.periodTo)
     : 0
-  const interestAmount = calcInterestAmount(loanAmount, interestRate, termMonths)
+  const interestAmount = calcInterestAmount(loanAmount, interestRate, termMonths, interestType)
   const totalRepayment = calcTotalRepayment(loanAmount, interestAmount)
 
   function handleSubmit(e: React.FormEvent) {
@@ -73,6 +74,7 @@ export default function NewLoanPage() {
       goldWeight: parseFloat(form.goldWeight) || 0,
       physicalBillNumber: form.physicalBillNumber.trim(),
       interestRate,
+      interestType,
       lateFeePerMonth,
       amountPaid: 0,
       interestAmount,
@@ -197,7 +199,27 @@ export default function NewLoanPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="interestRate">{t('loans.interestRateLabel')}</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="interestRate">
+                      {interestType === 'percentage' ? t('loans.interestRateLabel') : t('loans.interestValueLabel')}
+                    </Label>
+                    <div className="flex rounded-md border overflow-hidden text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setInterestType('percentage')}
+                        className={`px-2 py-0.5 transition-colors ${interestType === 'percentage' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                      >
+                        {t('loans.interestTypePct')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setInterestType('fixed')}
+                        className={`px-2 py-0.5 border-s transition-colors ${interestType === 'fixed' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                      >
+                        {t('loans.interestTypeFixed')}
+                      </button>
+                    </div>
+                  </div>
                   <Input id="interestRate" type="number" min="0" step="0.001" value={form.interestRate} onChange={e => set('interestRate', e.target.value)} required />
                 </div>
                 <div className="space-y-1.5">
@@ -217,7 +239,9 @@ export default function NewLoanPage() {
                 <span className="font-medium">{formatCurrency(loanAmount)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('loans.interestPct', { rate: interestRate })}</span>
+                <span className="text-muted-foreground">
+                  {interestType === 'fixed' ? t('loans.interestFixed') : t('loans.interestPct', { rate: interestRate })}
+                </span>
                 <span className="font-medium">{formatCurrency(interestAmount)}</span>
               </div>
               <Separator />

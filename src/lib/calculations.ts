@@ -1,8 +1,14 @@
-import type { Loan, LoanStatus } from '@/types'
+import type { InterestType, Loan, LoanStatus } from '@/types'
 
 const MS_PER_MONTH = 1000 * 60 * 60 * 24 * 30
 
-export function calcInterestAmount(loanAmount: number, interestRate: number, termMonths: number): number {
+export function calcInterestAmount(
+  loanAmount: number,
+  interestRate: number,
+  termMonths: number,
+  interestType: InterestType = 'percentage',
+): number {
+  if (interestType === 'fixed') return interestRate
   return loanAmount * (interestRate / 100) * termMonths
 }
 

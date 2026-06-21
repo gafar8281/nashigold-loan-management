@@ -1,5 +1,7 @@
 export type LoanStatus = 'Approved' | 'Active' | 'Closed' | 'Overdue'
 
+export type InterestType = 'percentage' | 'fixed'
+
 export interface Customer {
   id: string
   fullName: string
@@ -21,6 +23,7 @@ export interface Loan {
   goldWeight: number
   physicalBillNumber: string
   interestRate: number
+  interestType?: InterestType
   lateFeePerMonth: number
   amountPaid: number
   interestAmount: number

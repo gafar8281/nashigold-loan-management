@@ -18,7 +18,7 @@ import {
   calcTotalRepayment,
   calcRemainingBalance,
 } from '@/lib/calculations'
-import type { Loan } from '@/types'
+import type { InterestType, Loan } from '@/types'
 
 interface Props {
   loan: Loan | null
@@ -35,6 +35,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
   const [physicalBillNumber, setPhysicalBillNumber] = useState('')
   const [loanAmount, setLoanAmount] = useState('')
   const [interestRate, setInterestRate] = useState('')
+  const [interestType, setInterestType] = useState<InterestType>('percentage')
   const [lateFeePerMonth, setLateFeePerMonth] = useState('0')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,6 +48,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
     setPhysicalBillNumber(loan.physicalBillNumber ?? '')
     setLoanAmount(String(loan.loanAmount))
     setInterestRate(String(loan.interestRate))
+    setInterestType(loan.interestType ?? 'percentage')
     setLateFeePerMonth(String(loan.lateFeePerMonth))
     setError(null)
   }, [loan])
@@ -60,7 +62,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
     const rate = parseFloat(interestRate)
     const fee = parseFloat(lateFeePerMonth) || 0
     const weight = parseFloat(goldWeight)
-    const interestAmount = calcInterestAmount(amount, rate, termMonths)
+    const interestAmount = calcInterestAmount(amount, rate, termMonths, interestType)
     const totalRepayment = calcTotalRepayment(amount, interestAmount)
     const remainingBalance = calcRemainingBalance(totalRepayment, loan.amountPaid)
 
@@ -75,6 +77,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
         physicalBillNumber: physicalBillNumber.trim(),
         loanAmount: amount,
         interestRate: rate,
+        interestType,
         lateFeePerMonth: fee,
         interestAmount,
         totalRepayment,
@@ -157,7 +160,27 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="editInterestRate">{t('loans.interestRateLabel')}</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="editInterestRate">
+                  {interestType === 'percentage' ? t('loans.interestRateLabel') : t('loans.interestValueLabel')}
+                </Label>
+                <div className="flex rounded-md border overflow-hidden text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setInterestType('percentage')}
+                    className={`px-2 py-0.5 transition-colors ${interestType === 'percentage' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                  >
+                    {t('loans.interestTypePct')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInterestType('fixed')}
+                    className={`px-2 py-0.5 border-s transition-colors ${interestType === 'fixed' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                  >
+                    {t('loans.interestTypeFixed')}
+                  </button>
+                </div>
+              </div>
               <Input
                 id="editInterestRate"
                 type="number"

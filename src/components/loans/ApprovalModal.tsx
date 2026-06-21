@@ -69,8 +69,12 @@ export default function ApprovalModal({ open, loan, customer, onApprove, onRejec
                 <p className="font-medium">{formatDate(loan.periodFrom)} – {formatDate(loan.periodTo)}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">{t('approval.interestRate')}</p>
-                <p className="font-medium">{loan.interestRate}%</p>
+                <p className="text-xs text-muted-foreground">
+                  {loan.interestType === 'fixed' ? t('approval.interestRateFixed') : t('approval.interestRate')}
+                </p>
+                <p className="font-medium">
+                  {loan.interestType === 'fixed' ? formatCurrency(loan.interestRate) : `${loan.interestRate}%`}
+                </p>
               </div>
             </div>
 
