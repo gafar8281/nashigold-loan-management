@@ -8,7 +8,7 @@ export function calcInterestAmount(
   termMonths: number,
   interestType: InterestType = 'percentage',
 ): number {
-  if (interestType === 'fixed') return interestRate
+  if (interestType === 'fixed') return interestRate * termMonths
   return loanAmount * (interestRate / 100) * termMonths
 }
 
