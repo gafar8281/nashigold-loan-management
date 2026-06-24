@@ -144,18 +144,20 @@
     "interestValueLabel": "قيمة الفائدة",
     "interestFixed": "فائدة (ثابتة)",
     "lateFeeLabel": "غرامة التأخير الشهرية",
+    "discountLabel": "الخصم (%)",
+    "discountTypePct": "%",
+    "discountTypeFixed": "ر.س",
+    "discountValueLabel": "الخصم (ر.س)",
+    "discountAmount": "الخصم ({{rate}}%)",
     "noCustomersFound": "لا يوجد عملاء",
     "goldWeightDisplay": "الذهب (غ)",
     "loanTermLabel": "مدة القرض",
     "lateFeeMonthly": "{{amount}}/شهر",
     "whatsapp": {
       "greeting": "عزيزي {{name}}،",
-      "body": "هذا تذكير بأن قرض الذهب الخاص بك متأخر في السداد.",
-      "loanNumber": "رقم القرض: {{id}}",
-      "dueDate": "تاريخ الاستحقاق: {{date}}",
-      "daysOverdue": "أيام التأخر: {{count}} يوم",
-      "balance": "الرصيد المستحق: {{amount}}",
-      "cta": "يرجى زيارة الفرع أو التواصل معنا لسداد المبلغ المستحق."
+      "body": "هذا تذكير ودي بأن دفعة الذهب المحجوز لديك متأخرة بمقدار *{{count}} يوم*. الرصيد المستحق هو *{{amount}} ر.س*، وكان تاريخ الاستحقاق في *{{date}}*.",
+      "cta": "لأي استفسارات أو مساعدة، يرجى زيارة فرعنا.",
+      "closing": "شكراً لك."
     }
   },
   "approval": {
@@ -175,6 +177,7 @@
     "loanAmount": "مبلغ القرض",
     "interest": "الفائدة",
     "lateFeeIfOverdue": "غرامة تأخير شهرية (في حالة التأخر)",
+    "discount": "الخصم",
     "totalRepayment": "إجمالي السداد"
   },
   "reports": {

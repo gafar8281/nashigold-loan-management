@@ -144,18 +144,20 @@
     "interestValueLabel": "Interest Value",
     "interestFixed": "Interest (Fixed)",
     "lateFeeLabel": "Late Fee per Month",
+    "discountLabel": "Discount (%)",
+    "discountTypePct": "%",
+    "discountTypeFixed": "SAR",
+    "discountValueLabel": "Discount (SAR)",
+    "discountAmount": "Discount ({{rate}}%)",
     "noCustomersFound": "No customers found",
     "goldWeightDisplay": "Gold Weight (g)",
     "loanTermLabel": "Loan Term",
     "lateFeeMonthly": "{{amount}}/mo",
     "whatsapp": {
       "greeting": "Dear {{name}},",
-      "body": "This is a reminder that your gold loan is overdue.",
-      "loanNumber": "Loan Number: {{id}}",
-      "dueDate": "Due Date: {{date}}",
-      "daysOverdue": "Days Overdue: {{count}} day(s)",
-      "balance": "Outstanding Balance: {{amount}}",
-      "cta": "Please visit the branch or contact us to settle the outstanding amount."
+      "body": "This is a friendly reminder that your reserved gold payment is overdue by *{{count}} days*. The outstanding balance is *SAR {{amount}}*, and the payment was due on *{{date}}*.",
+      "cta": "For any inquiries or assistance, please visit our branch.",
+      "closing": "Thank you."
     }
   },
   "approval": {
@@ -175,6 +177,7 @@
     "loanAmount": "Loan Amount",
     "interest": "Interest",
     "lateFeeIfOverdue": "Monthly Late Fee (if overdue)",
+    "discount": "Discount",
     "totalRepayment": "Total Repayment"
   },
   "reports": {

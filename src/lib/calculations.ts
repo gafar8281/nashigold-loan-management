@@ -1,4 +1,4 @@
-import type { InterestType, Loan, LoanStatus } from '@/types'
+import type { DiscountType, InterestType, Loan, LoanStatus } from '@/types'
 
 const MS_PER_MONTH = 1000 * 60 * 60 * 24 * 30
 
@@ -47,6 +47,23 @@ export function calcMonthsOverdue(periodTo: string): number {
   const diff = Date.now() - new Date(periodTo).getTime()
   if (diff <= 0) return 0
   return Math.max(1, Math.ceil(diff / MS_PER_MONTH))
+}
+
+export function calcDiscountAmount(
+  totalRepayment: number,
+  discount: number,
+  discountType: DiscountType = 'percentage',
+): number {
+  if (discountType === 'fixed') return Math.min(totalRepayment, Math.max(0, discount))
+  return totalRepayment * (Math.min(100, Math.max(0, discount)) / 100)
+}
+
+export function calcDiscountedRepayment(
+  totalRepayment: number,
+  discount: number,
+  discountType: DiscountType = 'percentage',
+): number {
+  return totalRepayment - calcDiscountAmount(totalRepayment, discount, discountType)
 }
 
 export function calcEffectiveLateFee(

@@ -90,14 +90,15 @@ export default function LoanDetailPage() {
     const message = [
       t('loans.whatsapp.greeting', { name: customer.fullName }),
       '',
-      t('loans.whatsapp.body'),
-      '',
-      t('loans.whatsapp.loanNumber', { id: loan.id }),
-      t('loans.whatsapp.dueDate', { date: formatDate(loan.periodTo) }),
-      t('loans.whatsapp.daysOverdue', { count: daysOverdue }),
-      t('loans.whatsapp.balance', { amount: formatCurrency(effectiveOutstanding) }),
+      t('loans.whatsapp.body', {
+        count: daysOverdue,
+        amount: formatCurrency(effectiveOutstanding),
+        date: formatDate(loan.periodTo),
+      }),
       '',
       t('loans.whatsapp.cta'),
+      '',
+      t('loans.whatsapp.closing'),
     ].join('\n')
     const phone = customer.mobile.replace(/\D/g, '')
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
@@ -213,6 +214,12 @@ export default function LoanDetailPage() {
               <span className="text-muted-foreground">{t('loans.interest')}</span>
               <span>{formatCurrency(loan.interestAmount)}</span>
             </div>
+            {(loan.discount ?? 0) > 0 && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t('loans.discountAmount', { rate: loan.discount })}</span>
+                <span className="text-green-600">- {formatCurrency(loan.loanAmount + loan.interestAmount - loan.totalRepayment)}</span>
+              </div>
+            )}
             {loan.lateFeePerMonth > 0 && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">

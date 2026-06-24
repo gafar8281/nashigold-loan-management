@@ -14,9 +14,10 @@ import {
   calcTotalRepayment,
   calcRemainingBalance,
   calcTermMonths,
+  calcDiscountAmount,
 } from '@/lib/calculations'
 import { formatCurrency, todayISO } from '@/lib/formatters'
-import type { InterestType, Loan } from '@/types'
+import type { DiscountType, InterestType, Loan } from '@/types'
 
 export default function NewLoanPage() {
   const { customers, addLoan } = useData()
@@ -34,8 +35,10 @@ export default function NewLoanPage() {
     physicalBillNumber: '',
     interestRate: '5',
     lateFeePerMonth: '0',
+    discount: '0',
   })
   const [interestType, setInterestType] = useState<InterestType>('percentage')
+  const [discountType, setDiscountType] = useState<DiscountType>('percentage')
 
   const [customerSearch, setCustomerSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
@@ -56,11 +59,14 @@ export default function NewLoanPage() {
   const loanAmount = parseFloat(form.loanAmount) || 0
   const interestRate = parseFloat(form.interestRate) || 0
   const lateFeePerMonth = parseFloat(form.lateFeePerMonth) || 0
+  const rawDiscount = parseFloat(form.discount) || 0
   const termMonths = form.periodFrom && form.periodTo
     ? calcTermMonths(form.periodFrom, form.periodTo)
     : 0
   const interestAmount = calcInterestAmount(loanAmount, interestRate, termMonths, interestType)
   const totalRepayment = calcTotalRepayment(loanAmount, interestAmount)
+  const discountAmount = calcDiscountAmount(totalRepayment, rawDiscount, discountType)
+  const finalTotal = totalRepayment - discountAmount
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -76,10 +82,12 @@ export default function NewLoanPage() {
       interestRate,
       interestType,
       lateFeePerMonth,
+      discount: rawDiscount,
+      discountType,
       amountPaid: 0,
       interestAmount,
-      totalRepayment,
-      remainingBalance: calcRemainingBalance(totalRepayment, 0),
+      totalRepayment: finalTotal,
+      remainingBalance: calcRemainingBalance(finalTotal, 0),
       status: 'Active',
     })
     setShowModal(true)
@@ -226,6 +234,39 @@ export default function NewLoanPage() {
                   <Label htmlFor="lateFeePerMonth">{t('loans.lateFeeLabel')}</Label>
                   <Input id="lateFeePerMonth" type="number" min="0" step="0.01" value={form.lateFeePerMonth} onChange={e => set('lateFeePerMonth', e.target.value)} />
                 </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="discount">
+                      {discountType === 'percentage' ? t('loans.discountLabel') : t('loans.discountValueLabel')}
+                    </Label>
+                    <div className="flex rounded-md border overflow-hidden text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setDiscountType('percentage')}
+                        className={`px-2 py-0.5 transition-colors ${discountType === 'percentage' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                      >
+                        {t('loans.discountTypePct')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDiscountType('fixed')}
+                        className={`px-2 py-0.5 border-s transition-colors ${discountType === 'fixed' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                      >
+                        {t('loans.discountTypeFixed')}
+                      </button>
+                    </div>
+                  </div>
+                  <Input
+                    id="discount"
+                    type="number"
+                    min="0"
+                    {...(discountType === 'percentage' ? { max: '100' } : {})}
+                    step="0.01"
+                    value={form.discount}
+                    onChange={e => set('discount', e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -245,9 +286,19 @@ export default function NewLoanPage() {
                 <span className="font-medium">{formatCurrency(interestAmount)}</span>
               </div>
               <Separator />
+              {rawDiscount > 0 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>
+                    {discountType === 'fixed'
+                      ? t('loans.discountValueLabel')
+                      : t('loans.discountAmount', { rate: rawDiscount })}
+                  </span>
+                  <span>- {formatCurrency(discountAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <span className="font-medium">{t('loans.totalRepayment')}</span>
-                <span className="text-lg font-bold text-amber-600">{formatCurrency(totalRepayment)}</span>
+                <span className="text-lg font-bold text-amber-600">{formatCurrency(finalTotal)}</span>
               </div>
               {termMonths > 0 && (
                 <p className="text-xs text-muted-foreground pt-1">{t('loans.overLabel', { count: termMonths, unit: termUnit })}</p>

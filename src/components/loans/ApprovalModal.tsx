@@ -95,6 +95,18 @@ export default function ApprovalModal({ open, loan, customer, onApprove, onRejec
                   <p className="font-semibold text-muted-foreground">{t('loans.lateFeeMonthly', { amount: formatCurrency(loan.lateFeePerMonth) })}</p>
                 </div>
               )}
+              {(loan.discount ?? 0) > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {loan.discountType === 'fixed'
+                      ? t('loans.discountValueLabel')
+                      : t('loans.discountAmount', { rate: loan.discount })}
+                  </p>
+                  <p className="font-semibold text-green-600">
+                    - {formatCurrency(loan.loanAmount + loan.interestAmount - loan.totalRepayment)}
+                  </p>
+                </div>
+              )}
             </div>
 
             <Separator />

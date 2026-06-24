@@ -17,8 +17,9 @@ import {
   calcInterestAmount,
   calcTotalRepayment,
   calcRemainingBalance,
+  calcDiscountedRepayment,
 } from '@/lib/calculations'
-import type { InterestType, Loan } from '@/types'
+import type { DiscountType, InterestType, Loan } from '@/types'
 
 interface Props {
   loan: Loan | null
@@ -36,7 +37,9 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
   const [loanAmount, setLoanAmount] = useState('')
   const [interestRate, setInterestRate] = useState('')
   const [interestType, setInterestType] = useState<InterestType>('percentage')
+  const [discountType, setDiscountType] = useState<DiscountType>('percentage')
   const [lateFeePerMonth, setLateFeePerMonth] = useState('0')
+  const [discount, setDiscount] = useState('0')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -49,7 +52,9 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
     setLoanAmount(String(loan.loanAmount))
     setInterestRate(String(loan.interestRate))
     setInterestType(loan.interestType ?? 'percentage')
+    setDiscountType(loan.discountType ?? 'percentage')
     setLateFeePerMonth(String(loan.lateFeePerMonth))
+    setDiscount(String(loan.discount ?? 0))
     setError(null)
   }, [loan])
 
@@ -61,9 +66,11 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
     const amount = parseFloat(loanAmount)
     const rate = parseFloat(interestRate)
     const fee = parseFloat(lateFeePerMonth) || 0
+    const rawDiscount = parseFloat(discount) || 0
     const weight = parseFloat(goldWeight)
     const interestAmount = calcInterestAmount(amount, rate, termMonths, interestType)
-    const totalRepayment = calcTotalRepayment(amount, interestAmount)
+    const baseTotal = calcTotalRepayment(amount, interestAmount)
+    const totalRepayment = calcDiscountedRepayment(baseTotal, rawDiscount, discountType)
     const remainingBalance = calcRemainingBalance(totalRepayment, loan.amountPaid)
 
     setSaving(true)
@@ -79,6 +86,8 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
         interestRate: rate,
         interestType,
         lateFeePerMonth: fee,
+        discount: rawDiscount,
+        discountType,
         interestAmount,
         totalRepayment,
         remainingBalance,
@@ -158,7 +167,7 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="editInterestRate">
@@ -200,6 +209,39 @@ export default function EditLoanDialog({ loan, onClose }: Props) {
                 step="0.01"
                 value={lateFeePerMonth}
                 onChange={e => setLateFeePerMonth(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="editDiscount">
+                  {discountType === 'percentage' ? t('loans.discountLabel') : t('loans.discountValueLabel')}
+                </Label>
+                <div className="flex rounded-md border overflow-hidden text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setDiscountType('percentage')}
+                    className={`px-2 py-0.5 transition-colors ${discountType === 'percentage' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                  >
+                    {t('loans.discountTypePct')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDiscountType('fixed')}
+                    className={`px-2 py-0.5 border-s transition-colors ${discountType === 'fixed' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                  >
+                    {t('loans.discountTypeFixed')}
+                  </button>
+                </div>
+              </div>
+              <Input
+                id="editDiscount"
+                type="number"
+                min="0"
+                {...(discountType === 'percentage' ? { max: '100' } : {})}
+                step="0.01"
+                value={discount}
+                onChange={e => setDiscount(e.target.value)}
+                placeholder="0"
               />
             </div>
           </div>
