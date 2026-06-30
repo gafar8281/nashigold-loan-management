@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import StatusBadge from '@/components/shared/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/formatters'
-import { calcRemainingBalance, calcDaysOverdue, isOverdue, calcEffectiveLateFee, calcMonthsOverdue } from '@/lib/calculations'
+import { calcRemainingBalance, calcDaysOverdue, isOverdue, calcEffectiveLateFee, calcMonthsOverdue, calcDiscountedRepayment } from '@/lib/calculations'
+import type { DiscountType } from '@/types'
 import EditLoanDialog from '@/components/loans/EditLoanDialog'
 import type { Loan } from '@/types'
 
@@ -30,6 +31,10 @@ export default function LoanDetailPage() {
   const [editingLoan, setEditingLoan] = useState<Loan | null>(null)
   const [closeError, setCloseError] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [discountValue, setDiscountValue] = useState('')
+  const [discountType, setDiscountType] = useState<DiscountType>('percentage')
+  const [applyingDiscount, setApplyingDiscount] = useState(false)
+  const [discountError, setDiscountError] = useState<string | null>(null)
 
   const effectiveLateFee = loan ? calcEffectiveLateFee(loan.lateFeePerMonth, loan.periodTo, loan.status) : 0
   const effectiveTotalRepayment = loan ? loan.totalRepayment + effectiveLateFee : 0
@@ -79,6 +84,36 @@ export default function LoanDetailPage() {
       await updateLoan(loan.id, { status: 'Closed' })
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleApplyDiscount() {
+    if (!loan) return
+    const discount = parseFloat(discountValue)
+    if (!discount || discount <= 0) return
+    const baseRepayment = loan.loanAmount + loan.interestAmount
+    if (discountType === 'percentage' && discount > 100) {
+      setDiscountError(t('loans.discountExceedsRepayment'))
+      return
+    }
+    if (discountType === 'fixed' && discount > baseRepayment) {
+      setDiscountError(t('loans.discountExceedsRepayment'))
+      return
+    }
+    const newTotal = calcDiscountedRepayment(baseRepayment, discount, discountType)
+    const newRemaining = Math.max(0, newTotal - loan.amountPaid)
+    setApplyingDiscount(true)
+    try {
+      await updateLoan(loan.id, {
+        discount,
+        discountType,
+        totalRepayment: newTotal,
+        remainingBalance: newRemaining,
+      })
+      setDiscountValue('')
+      setDiscountError(null)
+    } finally {
+      setApplyingDiscount(false)
     }
   }
 
@@ -258,7 +293,50 @@ export default function LoanDetailPage() {
       {loan.status !== 'Closed' && (
         <Card>
           <CardHeader><CardTitle className="text-base">{t('loans.recordPayment')}</CardTitle></CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Discount row — independent action */}
+            <div className="flex items-end gap-3 max-w-sm">
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="discount">
+                  {discountType === 'percentage' ? t('loans.discountLabel') : t('loans.discountValueLabel')}
+                </Label>
+                <Input
+                  id="discount"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={discountValue}
+                  onChange={e => { setDiscountValue(e.target.value); setDiscountError(null) }}
+                />
+                {discountError && (
+                  <p className="text-sm text-red-600">{discountError}</p>
+                )}
+              </div>
+              <div className="flex border rounded-md overflow-hidden">
+                <button
+                  type="button"
+                  className={`px-3 py-2 text-sm font-medium transition-colors ${discountType === 'percentage' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-muted'}`}
+                  onClick={() => setDiscountType('percentage')}
+                >
+                  {t('loans.discountTypePct')}
+                </button>
+                <button
+                  type="button"
+                  className={`px-3 py-2 text-sm font-medium transition-colors ${discountType === 'fixed' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-muted'}`}
+                  onClick={() => setDiscountType('fixed')}
+                >
+                  {t('loans.discountTypeFixed')}
+                </button>
+              </div>
+              <Button type="button" variant="outline" onClick={handleApplyDiscount} disabled={applyingDiscount || !discountValue}>
+                {applyingDiscount ? t('common.saving') : t('loans.applyDiscount')}
+              </Button>
+            </div>
+
+            <Separator />
+
+            {/* Payment row */}
             <form onSubmit={handlePayment} className="flex items-end gap-3 max-w-sm">
               <div className="flex-1 space-y-1.5">
                 <Label htmlFor="payment">{t('loans.paymentAmount')}</Label>

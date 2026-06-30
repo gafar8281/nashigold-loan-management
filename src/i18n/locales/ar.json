@@ -149,6 +149,8 @@
     "discountTypeFixed": "ر.س",
     "discountValueLabel": "الخصم (ر.س)",
     "discountAmount": "الخصم ({{rate}}%)",
+    "applyDiscount": "تطبيق الخصم",
+    "discountExceedsRepayment": "لا يمكن أن يتجاوز الخصم إجمالي مبلغ السداد",
     "noCustomersFound": "لا يوجد عملاء",
     "goldWeightDisplay": "الذهب (غ)",
     "loanTermLabel": "مدة القرض",
