@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useData } from '@/context/DataContext'
+import { useAuth } from '@/context/AuthContext'
+import InitialBalanceLedger from '@/components/reports/InitialBalanceLedger'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import StatusBadge from '@/components/shared/StatusBadge'
@@ -15,6 +17,7 @@ const PAGE_SIZE = 50
 export default function ReportsPage() {
   const { loans, getCustomerById } = useData()
   const { t } = useTranslation()
+  const { isAdmin } = useAuth()
   const [activeTab, setActiveTab] = useState('active')
   const [activePage, setActivePage] = useState(1)
   const [overduePage, setOverduePage] = useState(1)
@@ -25,6 +28,7 @@ export default function ReportsPage() {
     { id: 'overdue', label: t('reports.overdueLoans') },
     { id: 'closed', label: t('reports.closedLoans') },
     { id: 'summary', label: t('reports.branchSummary') },
+    ...(isAdmin ? [{ id: 'ledger', label: t('reports.initialBalance') }] : []),
   ]
 
   const activeLoans = loans.filter(l => l.status === 'Active')
@@ -223,6 +227,9 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Tab: Initial Balance Ledger (admin only) */}
+      {activeTab === 'ledger' && isAdmin && <InitialBalanceLedger />}
 
       {/* Tab: Branch Summary */}
       {activeTab === 'summary' && (

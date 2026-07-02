@@ -80,7 +80,8 @@
     "dob": "تاريخ الميلاد",
     "activeLoans": "القروض النشطة",
     "memberSince": "عضو منذ",
-    "email": "البريد الإلكتروني"
+    "email": "البريد الإلكتروني",
+    "date": "التاريخ"
   },
   "customers": {
     "title": "العملاء",
@@ -202,7 +203,18 @@
     "loansClosed": "{{count}} قرض مغلق",
     "openLoans": "{{count}} قرض مفتوح",
     "overdueLoansCount": "{{count}} قرض متأخر",
-    "statusBreakdown": "توزيع حالات القروض"
+    "statusBreakdown": "توزيع حالات القروض",
+    "initialBalance": "الرصيد الافتتاحي",
+    "openingBalance": "الرصيد الافتتاحي",
+    "openingBalanceRow": "الرصيد الافتتاحي",
+    "saveBalance": "حفظ",
+    "voucher": "المستند",
+    "debit": "مدين",
+    "credit": "دائن",
+    "balance": "الرصيد",
+    "noTransactions": "لا توجد معاملات للعرض",
+    "branch": "الفرع",
+    "noBranches": "لا توجد فروع. يرجى إنشاء فرع أولاً."
   },
   "branches": {
     "title": "الفروع",

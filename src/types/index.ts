@@ -50,6 +50,13 @@ export interface AppUser {
   isActive: boolean
 }
 
+/** Firestore `settings/ledger-{branchId}` document — one per branch. */
+export interface LedgerSettings {
+  id: string
+  branchId: string
+  openingBalance: number
+}
+
 /** Firestore `branches/{branchId}` document. */
 export interface Branch {
   id: string

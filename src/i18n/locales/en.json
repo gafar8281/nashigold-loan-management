@@ -80,7 +80,8 @@
     "dob": "Date of Birth",
     "activeLoans": "Active Loans",
     "memberSince": "Member Since",
-    "email": "Email"
+    "email": "Email",
+    "date": "Date"
   },
   "customers": {
     "title": "Customers",
@@ -202,7 +203,18 @@
     "loansClosed": "{{count}} loans closed",
     "openLoans": "{{count}} open loans",
     "overdueLoansCount": "{{count}} overdue loans",
-    "statusBreakdown": "Loan Status Breakdown"
+    "statusBreakdown": "Loan Status Breakdown",
+    "initialBalance": "Initial Balance",
+    "openingBalance": "Opening Balance",
+    "openingBalanceRow": "Opening Balance",
+    "saveBalance": "Save",
+    "voucher": "Voucher",
+    "debit": "Debit",
+    "credit": "Credit",
+    "balance": "Balance",
+    "noTransactions": "No transactions to display",
+    "branch": "Branch",
+    "noBranches": "No branches found. Create a branch first."
   },
   "branches": {
     "title": "Branches",
