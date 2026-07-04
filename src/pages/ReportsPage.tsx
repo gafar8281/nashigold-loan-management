@@ -251,10 +251,12 @@ export default function ReportsPage() {
               <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">{t('reports.overdueAmount')}</CardTitle></CardHeader>
               <CardContent><p className="text-xl font-bold text-red-600">{formatCurrency(totalOverdueAmount)}</p><p className="text-xs text-muted-foreground mt-0.5">{t('reports.overdueLoansCount', { count: overdueLoans.length })}</p></CardContent>
             </Card>
-            <Card>
-              <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">{t('reports.profitAmount')}</CardTitle></CardHeader>
-              <CardContent><p className="text-xl font-bold text-green-600">{formatCurrency(totalProfit)}</p><p className="text-xs text-muted-foreground mt-0.5">{t('reports.totalProfitSub')}</p></CardContent>
-            </Card>
+            {isAdmin && (
+              <Card>
+                <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">{t('reports.profitAmount')}</CardTitle></CardHeader>
+                <CardContent><p className="text-xl font-bold text-green-600">{formatCurrency(totalProfit)}</p><p className="text-xs text-muted-foreground mt-0.5">{t('reports.totalProfitSub')}</p></CardContent>
+              </Card>
+            )}
           </div>
 
           <Card>

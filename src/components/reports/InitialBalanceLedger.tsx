@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useData } from '@/context/DataContext'
 import { useBranches } from '@/hooks/useBranches'
@@ -12,6 +13,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 
 interface LedgerRow {
+  loanId: string
   voucher: string
   date: string
   debit: number | null
@@ -58,9 +60,10 @@ export default function InitialBalanceLedger() {
 
   const rows: LedgerRow[] = []
   for (const loan of branchLoans) {
-    rows.push({ voucher: loan.id, date: loan.createdAt, debit: null, credit: loan.loanAmount })
+    const voucher = loan.physicalBillNumber || '—'
+    rows.push({ loanId: loan.id, voucher, date: loan.createdAt, debit: null, credit: loan.loanAmount })
     if (loan.status === 'Closed') {
-      rows.push({ voucher: loan.id, date: loan.periodTo, debit: loan.totalRepayment, credit: null })
+      rows.push({ loanId: loan.id, voucher, date: loan.periodTo, debit: loan.totalRepayment, credit: null })
     }
   }
 
@@ -128,6 +131,7 @@ export default function InitialBalanceLedger() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>{t('table.loanId')}</TableHead>
               <TableHead>{t('reports.voucher')}</TableHead>
               <TableHead>{t('table.date')}</TableHead>
               <TableHead className="text-end">{t('reports.debit')}</TableHead>
@@ -140,6 +144,7 @@ export default function InitialBalanceLedger() {
             <TableRow className="font-semibold bg-muted/40">
               <TableCell>{t('reports.openingBalanceRow')}</TableCell>
               <TableCell>—</TableCell>
+              <TableCell>—</TableCell>
               <TableCell />
               <TableCell />
               <TableCell className="text-end">{formatCurrency(openingBalance)}</TableCell>
@@ -147,14 +152,17 @@ export default function InitialBalanceLedger() {
 
             {displayRows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                   {t('reports.noTransactions')}
                 </TableCell>
               </TableRow>
             ) : (
               displayRows.map((row, i) => (
-                <TableRow key={`${row.voucher}-${row.date}-${i}`}>
-                  <TableCell className="font-medium text-amber-600">{row.voucher}</TableCell>
+                <TableRow key={`${row.loanId}-${row.date}-${i}`}>
+                  <TableCell className="font-medium text-amber-600">
+                    <Link to={`/loans/${row.loanId}`} className="hover:underline">{row.loanId}</Link>
+                  </TableCell>
+                  <TableCell className="font-medium">{row.voucher}</TableCell>
                   <TableCell>{formatDate(row.date)}</TableCell>
                   <TableCell className="text-end text-green-700">
                     {row.debit != null ? formatCurrency(row.debit) : ''}

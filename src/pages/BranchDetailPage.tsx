@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Pencil, Loader2, AlertCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useBranches } from '@/hooks/useBranches'
 import { setBranchActive } from '@/services/branchAdmin'
+import { settingsService } from '@/services/settingsService'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -11,7 +12,7 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import EditBranchDialog from '@/components/branches/EditBranchDialog'
-import { formatDate } from '@/lib/formatters'
+import { formatCurrency, formatDate } from '@/lib/formatters'
 
 export default function BranchDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -24,6 +25,15 @@ export default function BranchDetailPage() {
   const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [openingBalance, setOpeningBalance] = useState(0)
+
+  useEffect(() => {
+    if (!id) return
+    const unsub = settingsService.subscribe(items => {
+      setOpeningBalance(items.find(i => i.branchId === id)?.openingBalance ?? 0)
+    }, err => console.error('[BranchDetailPage]', err))
+    return unsub
+  }, [id])
 
   async function run(action: () => Promise<void>, successMsg?: string) {
     setBusy(true)
@@ -125,6 +135,10 @@ export default function BranchDetailPage() {
           <div>
             <p className="text-xs text-muted-foreground">{t('branches.lastUpdated')}</p>
             <p className="text-sm font-medium mt-0.5">{formatDate(branch.updatedAt.slice(0, 10))}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">{t('reports.openingBalance')}</p>
+            <p className="text-sm font-medium mt-0.5">{formatCurrency(openingBalance)}</p>
           </div>
         </CardContent>
       </Card>
