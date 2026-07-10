@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import StatusBadge from '@/components/shared/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/formatters'
-import { calcRemainingBalance, calcDaysOverdue, isOverdue, calcEffectiveLateFee, calcMonthsOverdue, calcDiscountedRepayment } from '@/lib/calculations'
+import { calcRemainingBalance, calcDaysOverdue, isOverdue, calcEffectiveLateFee, calcMonthsOverdue, calcDiscountedRepayment, calcTermMonths, calcInterestAmount, calcTotalRepayment } from '@/lib/calculations'
 import type { DiscountType } from '@/types'
 import EditLoanDialog from '@/components/loans/EditLoanDialog'
 import type { Loan } from '@/types'
@@ -35,6 +35,17 @@ export default function LoanDetailPage() {
   const [discountType, setDiscountType] = useState<DiscountType>('percentage')
   const [applyingDiscount, setApplyingDiscount] = useState(false)
   const [discountError, setDiscountError] = useState<string | null>(null)
+  const [periodFrom, setPeriodFrom] = useState(loan?.periodFrom ?? '')
+  const [periodTo, setPeriodTo] = useState(loan?.periodTo ?? '')
+  const [periodSyncedFor, setPeriodSyncedFor] = useState(loan?.id)
+  const [updatingPeriod, setUpdatingPeriod] = useState(false)
+  const [periodError, setPeriodError] = useState<string | null>(null)
+
+  if (loan && loan.id !== periodSyncedFor) {
+    setPeriodSyncedFor(loan.id)
+    setPeriodFrom(loan.periodFrom)
+    setPeriodTo(loan.periodTo)
+  }
 
   const effectiveLateFee = loan ? calcEffectiveLateFee(loan.lateFeePerMonth, loan.periodTo, loan.status) : 0
   const effectiveTotalRepayment = loan ? loan.totalRepayment + effectiveLateFee : 0
@@ -114,6 +125,34 @@ export default function LoanDetailPage() {
       setDiscountError(null)
     } finally {
       setApplyingDiscount(false)
+    }
+  }
+
+  async function handleUpdatePeriod() {
+    if (!loan) return
+    if (!periodFrom || !periodTo) return
+    if (new Date(periodTo) <= new Date(periodFrom)) {
+      setPeriodError(t('loans.periodToBeforeFrom'))
+      return
+    }
+    const termMonths = calcTermMonths(periodFrom, periodTo)
+    const interestAmount = calcInterestAmount(loan.loanAmount, loan.interestRate, termMonths, loan.interestType)
+    const baseTotal = calcTotalRepayment(loan.loanAmount, interestAmount)
+    const totalRepayment = calcDiscountedRepayment(baseTotal, loan.discount ?? 0, loan.discountType ?? 'percentage')
+    const remainingBalance = calcRemainingBalance(totalRepayment, loan.amountPaid)
+    setUpdatingPeriod(true)
+    try {
+      await updateLoan(loan.id, {
+        periodFrom,
+        periodTo,
+        termMonths,
+        interestAmount,
+        totalRepayment,
+        remainingBalance,
+      })
+      setPeriodError(null)
+    } finally {
+      setUpdatingPeriod(false)
     }
   }
 
@@ -333,6 +372,34 @@ export default function LoanDetailPage() {
                 {applyingDiscount ? t('common.saving') : t('loans.applyDiscount')}
               </Button>
             </div>
+
+            {/* Period edit row */}
+            <div className="flex items-end gap-3 max-w-md">
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="periodFromEdit">{t('loans.periodFrom')}</Label>
+                <Input
+                  id="periodFromEdit"
+                  type="date"
+                  value={periodFrom}
+                  onChange={e => { setPeriodFrom(e.target.value); setPeriodError(null) }}
+                />
+              </div>
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="periodToEdit">{t('loans.periodTo')}</Label>
+                <Input
+                  id="periodToEdit"
+                  type="date"
+                  value={periodTo}
+                  onChange={e => { setPeriodTo(e.target.value); setPeriodError(null) }}
+                />
+              </div>
+              <Button type="button" variant="outline" onClick={handleUpdatePeriod} disabled={updatingPeriod}>
+                {updatingPeriod ? t('common.saving') : t('common.update')}
+              </Button>
+            </div>
+            {periodError && (
+              <p className="text-sm text-red-600">{periodError}</p>
+            )}
 
             <Separator />
 

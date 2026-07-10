@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useData } from '@/context/DataContext'
 import { useAuth } from '@/context/AuthContext'
+import { useBranches } from '@/hooks/useBranches'
 import InitialBalanceLedger from '@/components/reports/InitialBalanceLedger'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -18,6 +19,7 @@ export default function ReportsPage() {
   const { loans, getCustomerById } = useData()
   const { t } = useTranslation()
   const { isAdmin } = useAuth()
+  const { branches, loading: branchesLoading } = useBranches()
   const [activeTab, setActiveTab] = useState('active')
   const [activePage, setActivePage] = useState(1)
   const [overduePage, setOverduePage] = useState(1)
@@ -45,7 +47,26 @@ export default function ReportsPage() {
     .filter(l => l.status !== 'Closed')
     .reduce((s, l) => s + l.remainingBalance, 0)
   const totalOverdueAmount = overdueLoans.reduce((s, l) => s + l.remainingBalance, 0)
-  const totalProfit = loans.reduce(
+
+  const sortedBranches = useMemo(
+    () => [...branches].sort((a, b) => a.branchName.localeCompare(b.branchName)),
+    [branches]
+  )
+
+  const branchProfits = useMemo(
+    () => sortedBranches.map(branch => {
+      const branchLoans = loans.filter(l => l.branchId === branch.id)
+      const profit = branchLoans.reduce(
+        (s, l) => s + l.interestAmount + calcEffectiveLateFee(l.lateFeePerMonth, l.periodTo, l.status),
+        0
+      )
+      return { id: branch.id, name: branch.branchName, profit, loanCount: branchLoans.length }
+    }),
+    [sortedBranches, loans]
+  )
+
+  const unassignedLoans = loans.filter(l => !l.branchId || !branches.some(b => b.id === l.branchId))
+  const unassignedProfit = unassignedLoans.reduce(
     (s, l) => s + l.interestAmount + calcEffectiveLateFee(l.lateFeePerMonth, l.periodTo, l.status),
     0
   )
@@ -251,13 +272,35 @@ export default function ReportsPage() {
               <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">{t('reports.overdueAmount')}</CardTitle></CardHeader>
               <CardContent><p className="text-xl font-bold text-red-600">{formatCurrency(totalOverdueAmount)}</p><p className="text-xs text-muted-foreground mt-0.5">{t('reports.overdueLoansCount', { count: overdueLoans.length })}</p></CardContent>
             </Card>
-            {isAdmin && (
-              <Card>
-                <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">{t('reports.profitAmount')}</CardTitle></CardHeader>
-                <CardContent><p className="text-xl font-bold text-green-600">{formatCurrency(totalProfit)}</p><p className="text-xs text-muted-foreground mt-0.5">{t('reports.totalProfitSub')}</p></CardContent>
-              </Card>
-            )}
           </div>
+
+          {isAdmin && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">{t('reports.profitByBranch')}</CardTitle></CardHeader>
+              <CardContent>
+                {!branchesLoading && branchProfits.length === 0 && unassignedLoans.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-8 text-center">{t('reports.noBranches')}</p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    {branchProfits.map(bp => (
+                      <div key={bp.id} className="rounded-lg border p-3">
+                        <p className="text-xs text-muted-foreground font-medium truncate">{bp.name}</p>
+                        <p className="text-xl font-bold text-green-600 mt-1">{formatCurrency(bp.profit)}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{t('reports.loansTotal', { count: bp.loanCount })}</p>
+                      </div>
+                    ))}
+                    {unassignedLoans.length > 0 && (
+                      <div className="rounded-lg border border-dashed p-3">
+                        <p className="text-xs text-muted-foreground font-medium truncate">{t('reports.unassignedBranch')}</p>
+                        <p className="text-xl font-bold text-green-600 mt-1">{formatCurrency(unassignedProfit)}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{t('reports.loansTotal', { count: unassignedLoans.length })}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader><CardTitle className="text-base">{t('reports.statusBreakdown')}</CardTitle></CardHeader>
