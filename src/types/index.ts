@@ -26,7 +26,7 @@ export interface Loan {
   physicalBillNumber: string
   interestRate: number
   interestType?: InterestType
-  lateFeePerMonth: number
+  lateFeePerMonth: number   // flat one-time late fee applied once overdue (field name kept for existing data compatibility, no longer multiplied by months overdue)
   discount?: number
   discountType?: DiscountType
   amountPaid: number

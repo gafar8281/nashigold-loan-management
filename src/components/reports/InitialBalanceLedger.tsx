@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import TablePagination from '@/components/shared/TablePagination'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 
 interface LedgerRow {
@@ -19,6 +20,8 @@ interface LedgerRow {
   debit: number | null
   credit: number | null
 }
+
+const PAGE_SIZE = 150
 
 export default function InitialBalanceLedger() {
   const { loans } = useData()
@@ -36,6 +39,7 @@ export default function InitialBalanceLedger() {
   const [settingsItems, setSettingsItems] = useState<LedgerSettings[]>([])
   const [saving, setSaving] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     const unsub = settingsService.subscribe(setSettingsItems, err => console.error('[InitialBalanceLedger]', err))
@@ -75,6 +79,9 @@ export default function InitialBalanceLedger() {
     return { ...row, balance: running }
   })
 
+  const totalPages = Math.ceil(displayRows.length / PAGE_SIZE)
+  const paginatedRows = displayRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
   if (!branchesLoading && sortedBranches.length === 0) {
     return (
       <Card>
@@ -100,7 +107,7 @@ export default function InitialBalanceLedger() {
           </label>
           <NativeSelect
             value={effectiveBranchId}
-            onChange={e => setSelectedBranchId(e.target.value)}
+            onChange={e => { setSelectedBranchId(e.target.value); setPage(1) }}
             disabled={branchesLoading}
             size="sm"
           >
@@ -157,7 +164,7 @@ export default function InitialBalanceLedger() {
                 </TableCell>
               </TableRow>
             ) : (
-              displayRows.map((row, i) => (
+              paginatedRows.map((row, i) => (
                 <TableRow key={`${row.loanId}-${row.date}-${i}`}>
                   <TableCell className="font-medium text-amber-600">
                     <Link to={`/loans/${row.loanId}`} className="hover:underline">{row.loanId}</Link>
@@ -176,6 +183,14 @@ export default function InitialBalanceLedger() {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={displayRows.length}
+          pageSize={PAGE_SIZE}
+          onPrev={() => setPage(p => p - 1)}
+          onNext={() => setPage(p => p + 1)}
+        />
       </CardContent>
     </Card>
   )

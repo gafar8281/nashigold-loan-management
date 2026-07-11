@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import StatusBadge from '@/components/shared/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/formatters'
-import { calcRemainingBalance, calcDaysOverdue, isOverdue, calcEffectiveLateFee, calcMonthsOverdue, calcDiscountedRepayment, calcTermMonths, calcInterestAmount, calcTotalRepayment } from '@/lib/calculations'
+import { calcRemainingBalance, calcDaysOverdue, isOverdue, calcEffectiveLateFee, calcDiscountedRepayment, calcTermMonths, calcInterestAmount, calcTotalRepayment } from '@/lib/calculations'
 import type { DiscountType } from '@/types'
 import EditLoanDialog from '@/components/loans/EditLoanDialog'
 import type { Loan } from '@/types'
@@ -40,11 +40,15 @@ export default function LoanDetailPage() {
   const [periodSyncedFor, setPeriodSyncedFor] = useState(loan?.id)
   const [updatingPeriod, setUpdatingPeriod] = useState(false)
   const [periodError, setPeriodError] = useState<string | null>(null)
+  const [lateFeeValue, setLateFeeValue] = useState(loan?.lateFeePerMonth != null ? String(loan.lateFeePerMonth) : '0')
+  const [updatingLateFee, setUpdatingLateFee] = useState(false)
+  const [lateFeeError, setLateFeeError] = useState<string | null>(null)
 
   if (loan && loan.id !== periodSyncedFor) {
     setPeriodSyncedFor(loan.id)
     setPeriodFrom(loan.periodFrom)
     setPeriodTo(loan.periodTo)
+    setLateFeeValue(String(loan.lateFeePerMonth))
   }
 
   const effectiveLateFee = loan ? calcEffectiveLateFee(loan.lateFeePerMonth, loan.periodTo, loan.status) : 0
@@ -156,6 +160,27 @@ export default function LoanDetailPage() {
     }
   }
 
+  async function handleUpdateLateFee() {
+    if (!loan) return
+    const fee = parseFloat(lateFeeValue)
+    if (isNaN(fee) || fee < 0) {
+      setLateFeeError(t('loans.invalidLateFee'))
+      return
+    }
+    const newEffectiveLateFee = calcEffectiveLateFee(fee, loan.periodTo, loan.status)
+    const newRemaining = calcRemainingBalance(loan.totalRepayment + newEffectiveLateFee, loan.amountPaid)
+    setUpdatingLateFee(true)
+    try {
+      await updateLoan(loan.id, {
+        lateFeePerMonth: fee,
+        remainingBalance: newRemaining,
+      })
+      setLateFeeError(null)
+    } finally {
+      setUpdatingLateFee(false)
+    }
+  }
+
   const canClose = loan.status !== 'Closed'
 
   function handleSendWhatsApp() {
@@ -178,9 +203,7 @@ export default function LoanDetailPage() {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
   }
 
-  const monthsOverdue = calcMonthsOverdue(loan.periodTo)
   const termUnit = loan.termMonths === 1 ? t('common.month') : t('common.months')
-  const monthUnit = monthsOverdue === 1 ? t('common.month') : t('common.months')
 
   return (
     <div className="p-6 space-y-6 max-w-3xl">
@@ -298,13 +321,13 @@ export default function LoanDetailPage() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   {isOverdue(loan.periodTo, loan.status)
-                    ? t('loans.lateFeeActive', { count: monthsOverdue, unit: monthUnit })
+                    ? t('loans.lateFeeActive')
                     : t('loans.lateFeeIfOverdue')}
                 </span>
                 <span className={isOverdue(loan.periodTo, loan.status) ? 'text-red-600' : 'text-muted-foreground'}>
                   {isOverdue(loan.periodTo, loan.status)
                     ? formatCurrency(effectiveLateFee)
-                    : t('loans.lateFeeMonthly', { amount: formatCurrency(loan.lateFeePerMonth) })}
+                    : t('loans.lateFeeAmount', { amount: formatCurrency(loan.lateFeePerMonth) })}
                 </span>
               </div>
             )}
@@ -399,6 +422,27 @@ export default function LoanDetailPage() {
             </div>
             {periodError && (
               <p className="text-sm text-red-600">{periodError}</p>
+            )}
+
+            {/* Late fee edit row */}
+            <div className="flex items-end gap-3 max-w-sm">
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="lateFeeEdit">{t('loans.lateFeeLabel')} (SAR)</Label>
+                <Input
+                  id="lateFeeEdit"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={lateFeeValue}
+                  onChange={e => { setLateFeeValue(e.target.value); setLateFeeError(null) }}
+                />
+              </div>
+              <Button type="button" variant="outline" onClick={handleUpdateLateFee} disabled={updatingLateFee}>
+                {updatingLateFee ? t('common.saving') : t('common.update')}
+              </Button>
+            </div>
+            {lateFeeError && (
+              <p className="text-sm text-red-600">{lateFeeError}</p>
             )}
 
             <Separator />

@@ -305,7 +305,7 @@ export default function NewLoanPage() {
               )}
               {lateFeePerMonth > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  {t('loans.lateFeeIfOverdue')}: {t('loans.lateFeeMonthly', { amount: formatCurrency(lateFeePerMonth) })}
+                  {t('loans.lateFeeIfOverdue')}: {t('loans.lateFeeAmount', { amount: formatCurrency(lateFeePerMonth) })}
                 </p>
               )}
             </CardContent>

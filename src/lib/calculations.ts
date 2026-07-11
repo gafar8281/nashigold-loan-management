@@ -43,12 +43,6 @@ export function calcDaysOverdue(periodTo: string): number {
   return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)))
 }
 
-export function calcMonthsOverdue(periodTo: string): number {
-  const diff = Date.now() - new Date(periodTo).getTime()
-  if (diff <= 0) return 0
-  return Math.max(1, Math.ceil(diff / MS_PER_MONTH))
-}
-
 export function calcDiscountAmount(
   totalRepayment: number,
   discount: number,
@@ -71,7 +65,6 @@ export function calcEffectiveLateFee(
   periodTo: string,
   status: LoanStatus,
 ): number {
-  const rate = lateFeePerMonth ?? 0
   if (!isOverdue(periodTo, status)) return 0
-  return rate * calcMonthsOverdue(periodTo)
+  return lateFeePerMonth ?? 0
 }

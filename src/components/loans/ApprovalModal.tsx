@@ -92,7 +92,7 @@ export default function ApprovalModal({ open, loan, customer, onApprove, onRejec
               {loan.lateFeePerMonth > 0 && (
                 <div>
                   <p className="text-xs text-muted-foreground">{t('approval.lateFeeIfOverdue')}</p>
-                  <p className="font-semibold text-muted-foreground">{t('loans.lateFeeMonthly', { amount: formatCurrency(loan.lateFeePerMonth) })}</p>
+                  <p className="font-semibold text-muted-foreground">{t('loans.lateFeeAmount', { amount: formatCurrency(loan.lateFeePerMonth) })}</p>
                 </div>
               )}
               {(loan.discount ?? 0) > 0 && (
