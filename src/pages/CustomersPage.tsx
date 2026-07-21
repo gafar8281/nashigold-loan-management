@@ -26,7 +26,8 @@ export default function CustomersPage() {
     return (
       c.fullName.toLowerCase().includes(q) ||
       c.idNumber.includes(q) ||
-      c.id.toLowerCase().includes(q)
+      c.id.toLowerCase().includes(q) ||
+      c.mobile.toLowerCase().includes(q)
     )
   })
 

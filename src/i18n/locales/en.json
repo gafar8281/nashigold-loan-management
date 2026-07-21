@@ -88,7 +88,7 @@
     "title": "Customers",
     "subtitle": "{{count}} total customers",
     "addCustomer": "Add Customer",
-    "searchPlaceholder": "Search by name, ID number, or customer ID…",
+    "searchPlaceholder": "Search by name, ID number, mobile, or customer ID…",
     "noFound": "No customers found",
     "profile": "Customer Profile",
     "loanHistory": "Loan History ({{count}})",
@@ -161,7 +161,7 @@
     "lateFeeAmount": "{{amount}}",
     "whatsapp": {
       "greeting": "Dear {{name}},",
-      "body": "This is a friendly reminder that your reserved gold payment is overdue by *{{count}} days*. The outstanding balance is *{{amount}}*, and the payment was due on *{{date}}*.",
+      "body": "This is a friendly reminder that your reserved gold payment is overdue by *{{count}} days*. The payment was due on *{{date}}*.",
       "cta": "For any inquiries or assistance, please visit our branch.",
       "closing": "Thank you."
     }
@@ -217,7 +217,8 @@
     "balance": "Balance",
     "noTransactions": "No transactions to display",
     "branch": "Branch",
-    "noBranches": "No branches found. Create a branch first."
+    "noBranches": "No branches found. Create a branch first.",
+    "exportCsv": "Export to CSV"
   },
   "branches": {
     "title": "Branches",

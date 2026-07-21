@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Download } from 'lucide-react'
 import { useData } from '@/context/DataContext'
 import { useBranches } from '@/hooks/useBranches'
 import { settingsService } from '@/services/settingsService'
@@ -11,7 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import TablePagination from '@/components/shared/TablePagination'
-import { formatCurrency, formatDate } from '@/lib/formatters'
+import { formatCurrency, formatDate, todayISO } from '@/lib/formatters'
+import { toCsv, downloadCsv } from '@/lib/csv'
 
 interface LedgerRow {
   loanId: string
@@ -82,6 +84,30 @@ export default function InitialBalanceLedger() {
   const totalPages = Math.ceil(displayRows.length / PAGE_SIZE)
   const paginatedRows = displayRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  function handleExport() {
+    const headers = [
+      t('table.loanId'),
+      t('reports.voucher'),
+      t('table.date'),
+      t('reports.debit'),
+      t('reports.credit'),
+      t('reports.balance'),
+    ]
+    const rows: (string | number)[][] = [
+      [t('reports.openingBalanceRow'), '—', '—', '', '', openingBalance],
+      ...displayRows.map(row => [
+        row.loanId,
+        row.voucher,
+        formatDate(row.date),
+        row.debit ?? '',
+        row.credit ?? '',
+        row.balance,
+      ]),
+    ]
+    const branchName = sortedBranches.find(b => b.id === effectiveBranchId)?.branchName ?? effectiveBranchId
+    downloadCsv(`initial-balance-${branchName}-${todayISO()}.csv`, toCsv(headers, rows))
+  }
+
   if (!branchesLoading && sortedBranches.length === 0) {
     return (
       <Card>
@@ -97,8 +123,17 @@ export default function InitialBalanceLedger() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-base">{t('reports.initialBalance')}</CardTitle>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleExport}
+          disabled={displayRows.length === 0 || !effectiveBranchId}
+        >
+          <Download className="h-4 w-4" />
+          {t('reports.exportCsv')}
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-2 max-w-sm">

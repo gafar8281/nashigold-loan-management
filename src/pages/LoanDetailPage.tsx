@@ -191,7 +191,6 @@ export default function LoanDetailPage() {
       '',
       t('loans.whatsapp.body', {
         count: daysOverdue,
-        amount: formatCurrency(effectiveOutstanding),
         date: formatDate(loan.periodTo),
       }),
       '',
