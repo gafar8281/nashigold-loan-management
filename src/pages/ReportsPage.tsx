@@ -5,12 +5,14 @@ import { useData } from '@/context/DataContext'
 import { useAuth } from '@/context/AuthContext'
 import { useBranches } from '@/hooks/useBranches'
 import InitialBalanceLedger from '@/components/reports/InitialBalanceLedger'
+import LoanReport from '@/components/reports/LoanReport'
+import BranchProfitCard from '@/components/reports/BranchProfitCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import StatusBadge from '@/components/shared/StatusBadge'
 import TablePagination from '@/components/shared/TablePagination'
 import { formatCurrency, formatDate } from '@/lib/formatters'
-import { calcDaysOverdue, calcEffectiveLateFee } from '@/lib/calculations'
+import { calcDaysOverdue, calcExpectedProfit, calcRealizedProfit } from '@/lib/calculations'
 import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 50
@@ -29,6 +31,7 @@ export default function ReportsPage() {
     { id: 'active', label: t('reports.activeLoans') },
     { id: 'overdue', label: t('reports.overdueLoans') },
     { id: 'closed', label: t('reports.closedLoans') },
+    ...(isAdmin ? [{ id: 'loanReport', label: t('reports.loanReport') }] : []),
     { id: 'summary', label: t('reports.branchSummary') },
     ...(isAdmin ? [{ id: 'ledger', label: t('reports.initialBalance') }] : []),
   ]
@@ -53,23 +56,7 @@ export default function ReportsPage() {
     [branches]
   )
 
-  const branchProfits = useMemo(
-    () => sortedBranches.map(branch => {
-      const branchLoans = loans.filter(l => l.branchId === branch.id)
-      const profit = branchLoans.reduce(
-        (s, l) => s + l.interestAmount + calcEffectiveLateFee(l.lateFeePerMonth, l.periodTo, l.status),
-        0
-      )
-      return { id: branch.id, name: branch.branchName, profit, loanCount: branchLoans.length }
-    }),
-    [sortedBranches, loans]
-  )
-
-  const unassignedLoans = loans.filter(l => !l.branchId || !branches.some(b => b.id === l.branchId))
-  const unassignedProfit = unassignedLoans.reduce(
-    (s, l) => s + l.interestAmount + calcEffectiveLateFee(l.lateFeePerMonth, l.periodTo, l.status),
-    0
-  )
+  const receivableLoans = loans.filter(l => l.status === 'Active' || l.status === 'Overdue' || l.status === 'Approved')
 
   return (
     <div className="p-6 space-y-6">
@@ -249,12 +236,16 @@ export default function ReportsPage() {
         </Card>
       )}
 
+      {/* Tab: Loan Report (date-range filter + CSV export, admin only) */}
+      {activeTab === 'loanReport' && isAdmin && <LoanReport />}
+
       {/* Tab: Initial Balance Ledger (admin only) */}
       {activeTab === 'ledger' && isAdmin && <InitialBalanceLedger />}
 
       {/* Tab: Branch Summary */}
       {activeTab === 'summary' && (
         <div className="space-y-4">
+          <h2 className="text-lg font-semibold">{t('reports.summaryOfAccountingTransaction')}</h2>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Card>
               <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground font-medium">{t('reports.totalDisbursed')}</CardTitle></CardHeader>
@@ -275,31 +266,25 @@ export default function ReportsPage() {
           </div>
 
           {isAdmin && (
-            <Card>
-              <CardHeader><CardTitle className="text-base">{t('reports.profitByBranch')}</CardTitle></CardHeader>
-              <CardContent>
-                {!branchesLoading && branchProfits.length === 0 && unassignedLoans.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">{t('reports.noBranches')}</p>
-                ) : (
-                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                    {branchProfits.map(bp => (
-                      <div key={bp.id} className="rounded-lg border p-3">
-                        <p className="text-xs text-muted-foreground font-medium truncate">{bp.name}</p>
-                        <p className="text-xl font-bold text-green-600 mt-1">{formatCurrency(bp.profit)}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{t('reports.loansTotal', { count: bp.loanCount })}</p>
-                      </div>
-                    ))}
-                    {unassignedLoans.length > 0 && (
-                      <div className="rounded-lg border border-dashed p-3">
-                        <p className="text-xs text-muted-foreground font-medium truncate">{t('reports.unassignedBranch')}</p>
-                        <p className="text-xl font-bold text-green-600 mt-1">{formatCurrency(unassignedProfit)}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{t('reports.loansTotal', { count: unassignedLoans.length })}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <>
+              <h2 className="text-lg font-semibold">{t('reports.dividendsReceivable')}</h2>
+              <BranchProfitCard
+                title={t('reports.profitByBranch')}
+                loans={receivableLoans}
+                branches={sortedBranches}
+                branchesLoading={branchesLoading}
+                profitOf={calcExpectedProfit}
+              />
+
+              <h2 className="text-lg font-semibold">{t('reports.monthlyRealizedProfit')}</h2>
+              <BranchProfitCard
+                title={t('reports.profitByBranch')}
+                loans={closedLoans}
+                branches={sortedBranches}
+                branchesLoading={branchesLoading}
+                profitOf={calcRealizedProfit}
+              />
+            </>
           )}
 
           <Card>

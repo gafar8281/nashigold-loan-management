@@ -68,3 +68,21 @@ export function calcEffectiveLateFee(
   if (!isOverdue(periodTo, status)) return 0
   return lateFeePerMonth ?? 0
 }
+
+/**
+ * Expected profit on a loan that hasn't been fully collected yet: interest
+ * plus any late fee currently owed. Used for "Dividends Receivable".
+ */
+export function calcExpectedProfit(loan: Loan): number {
+  return loan.interestAmount + calcEffectiveLateFee(loan.lateFeePerMonth, loan.periodTo, loan.status)
+}
+
+/**
+ * Realized profit on a Closed loan: interest, plus any late fee actually
+ * collected. `calcEffectiveLateFee` returns 0 once a loan is Closed, but a
+ * loan can only close once `amountPaid` covers `totalRepayment` plus any
+ * late fee due — so anything paid above `totalRepayment` is that late fee.
+ */
+export function calcRealizedProfit(loan: Loan): number {
+  return loan.interestAmount + Math.max(0, loan.amountPaid - loan.totalRepayment)
+}
