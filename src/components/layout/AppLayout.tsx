@@ -21,10 +21,12 @@ export default function AppLayout() {
     { to: '/', label: t('nav.dashboard'), icon: LayoutDashboard, end: true },
     { to: '/customers', label: t('nav.customers'), icon: Users, end: false },
     { to: '/loans', label: t('nav.loans'), icon: Landmark, end: false },
-    { to: '/reports', label: t('nav.reports'), icon: BarChart3, end: false },
   ]
-  const adminNavItem = { to: '/branches', label: t('nav.branches'), icon: Building2, end: false }
-  const navItems = isAdmin ? [...baseNavItems, adminNavItem] : baseNavItems
+  const adminNavItems = [
+    { to: '/reports', label: t('nav.reports'), icon: BarChart3, end: false },
+    { to: '/branches', label: t('nav.branches'), icon: Building2, end: false },
+  ]
+  const navItems = isAdmin ? [...baseNavItems, ...adminNavItems] : baseNavItems
 
   async function handleLogout() {
     await logout()

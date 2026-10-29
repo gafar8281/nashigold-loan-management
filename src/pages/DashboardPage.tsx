@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Landmark, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useData } from '@/context/DataContext'
+import { useAuth } from '@/context/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import StatusBadge from '@/components/shared/StatusBadge'
@@ -9,6 +10,7 @@ import { formatCurrency, formatDate } from '@/lib/formatters'
 
 export default function DashboardPage() {
   const { loans, customers, getCustomerById } = useData()
+  const { isAdmin } = useAuth()
   const { t } = useTranslation()
 
   const active = loans.filter(l => l.status === 'Active')
@@ -65,7 +67,8 @@ export default function DashboardPage() {
         <p className="text-sm text-muted-foreground mt-0.5">{t('dashboard.subtitle')}</p>
       </div>
 
-      {/* Stat cards */}
+      {/* Stat cards (admin only) */}
+      {isAdmin && (
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {statCards.filter(c => !c.wide).map(card => (
           <Card key={card.title}>
@@ -96,6 +99,7 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
+      )}
 
       {/* Recent loans */}
       <Card>

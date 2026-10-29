@@ -105,6 +105,7 @@
     "newLoan": "New Loan",
     "allLoans": "All Loans",
     "noFound": "No loans found",
+    "searchPlaceholder": "Search by loan ID or bill no...",
     "notFound": "Loan not found.",
     "backToLoans": "Back to loans",
     "details": "Loan Details",

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useData } from '@/context/DataContext'
+import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import StatusBadge from '@/components/shared/StatusBadge'
 import TablePagination from '@/components/shared/TablePagination'
@@ -15,8 +17,10 @@ const PAGE_SIZE = 50
 
 export default function LoansPage() {
   const { loans, getCustomerById } = useData()
+  const { isAdmin } = useAuth()
   const { t } = useTranslation()
   const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
 
   const statusOptions = [
@@ -27,9 +31,15 @@ export default function LoansPage() {
     { value: 'Closed', label: t('status.Closed') },
   ]
 
-  const filtered = statusFilter === 'all'
-    ? loans
-    : loans.filter(l => l.status === statusFilter)
+  const q = search.trim().toLowerCase()
+  const filtered = loans.filter(l => {
+    if (isAdmin && statusFilter !== 'all' && l.status !== statusFilter) return false
+    if (!q) return true
+    return (
+      l.id.toLowerCase().includes(q) ||
+      (l.physicalBillNumber ?? '').toLowerCase().includes(q)
+    )
+  })
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -50,27 +60,38 @@ export default function LoansPage() {
       </div>
 
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex gap-2 flex-wrap">
-            {statusOptions.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => { setStatusFilter(opt.value); setPage(1) }}
-                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  statusFilter === opt.value
-                    ? 'bg-amber-500 text-white border-amber-500'
-                    : 'border-border text-muted-foreground hover:border-amber-300'
-                }`}
-              >
-                {opt.label}
-                {opt.value !== 'all' && (
-                  <span className="ms-1.5 opacity-70">
-                    {loans.filter(l => l.status === opt.value).length}
-                  </span>
-                )}
-              </button>
-            ))}
+        <CardHeader className="pb-3 space-y-3">
+          <div className="relative max-w-sm">
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="ps-9"
+              placeholder={t('loans.searchPlaceholder')}
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1) }}
+            />
           </div>
+          {isAdmin && (
+            <div className="flex gap-2 flex-wrap">
+              {statusOptions.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setStatusFilter(opt.value); setPage(1) }}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    statusFilter === opt.value
+                      ? 'bg-amber-500 text-white border-amber-500'
+                      : 'border-border text-muted-foreground hover:border-amber-300'
+                  }`}
+                >
+                  {opt.label}
+                  {opt.value !== 'all' && (
+                    <span className="ms-1.5 opacity-70">
+                      {loans.filter(l => l.status === opt.value).length}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           <Table>

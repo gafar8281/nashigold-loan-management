@@ -51,8 +51,8 @@ function AppWithDirection() {
                 <Route path="/loans" element={<LoansPage />} />
                 <Route path="/loans/new" element={<NewLoanPage />} />
                 <Route path="/loans/:id" element={<LoanDetailPage />} />
-                <Route path="/reports" element={<ReportsPage />} />
                 <Route element={<AdminRoute />}>
+                  <Route path="/reports" element={<ReportsPage />} />
                   <Route path="/branches" element={<BranchesPage />} />
                   <Route path="/branches/:id" element={<BranchDetailPage />} />
                 </Route>
