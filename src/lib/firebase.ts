@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -12,6 +13,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-// Firestore is the only Firebase service we use — authentication is handled
-// entirely against the `users` collection (see services/userService.ts).
+// App credentials are checked against the `users` collection (see
+// services/userService.ts). Firebase Auth is used only for an anonymous session
+// so Firestore security rules can require `request.auth != null`
+// (see lib/anonymousAuth.ts).
 export const db = getFirestore(app);
+export const auth = getAuth(app);

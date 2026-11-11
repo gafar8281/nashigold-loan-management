@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { ensureAnonymousAuth } from '@/lib/anonymousAuth'
 import { bootstrapAdmin } from '@/lib/authBootstrap'
 import { findUserByEmail } from '@/services/userService'
 import type { AppUser } from '@/types'
@@ -42,9 +43,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // runs independently in the background.
   const initializing = !authReady
 
-  // Bootstrap the Super Admin account silently in the background.
+  // Bootstrap the Super Admin account silently in the background, once the
+  // anonymous Firebase session is in place.
   useEffect(() => {
-    bootstrapAdmin().catch(err => console.error('[AuthProvider] bootstrap failed:', err))
+    ensureAnonymousAuth()
+      .then(bootstrapAdmin)
+      .catch(err => console.error('[AuthProvider] bootstrap failed:', err))
   }, [])
 
   // Restore the session on refresh from the persisted uid.
@@ -54,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const uid = localStorage.getItem(SESSION_KEY)
       if (uid) {
         try {
+          await ensureAnonymousAuth()
           const profile = await fetchProfile(uid)
           if (cancelled) return
           if (!profile || !profile.isActive) {
@@ -78,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function login(email: string, password: string): Promise<string | null> {
     try {
+      await ensureAnonymousAuth()
       const record = await findUserByEmail(email)
       if (!record || record.password !== password) {
         return 'auth.errors.incorrectCredentials'
@@ -98,6 +104,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function logout(): Promise<void> {
+    // Only the app session is cleared; the anonymous Firebase session is kept so
+    // each login doesn't create a new anonymous user.
     localStorage.removeItem(SESSION_KEY)
     setUser(null)
   }
